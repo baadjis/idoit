@@ -1,7 +1,7 @@
-# On utilise bien la version 3.12-slim comme ton PC
+# On garde ta version 3.12
 FROM python:3.12-slim
 
-# On installe libgl1 (le remplaçant de libgl1-mesa-glx) et libglib2.0-0
+# CORRECTION ICI : on remplace libgl1-mesa-glx par libgl1
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -9,15 +9,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copie des fichiers
+# On copie tout le projet
 COPY . .
 
-# Installation des bibliothèques Python
+# Installation des dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Port spécifique Hugging Face
+# Port pour Hugging Face
 ENV PORT=7860
 EXPOSE 7860
 
-# Lancement
+# Lancement de l'app
 CMD ["python", "main.py"]
