@@ -1,7 +1,6 @@
-# On garde ta version 3.12
 FROM python:3.12-slim
 
-# CORRECTION ICI : on remplace libgl1-mesa-glx par libgl1
+# Mise à jour pour Debian Trixie : on utilise libgl1 au lieu de libgl1-mesa-glx
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -9,15 +8,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# On copie tout le projet
+# Copie de tous les fichiers du projet
 COPY . .
 
 # Installation des dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Port pour Hugging Face
+# Port obligatoire pour Hugging Face
 ENV PORT=7860
 EXPOSE 7860
 
-# Lancement de l'app
+# Lancement de l'application
 CMD ["python", "main.py"]
