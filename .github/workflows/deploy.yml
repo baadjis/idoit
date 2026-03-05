@@ -1,8 +1,7 @@
 name: Sync to Hugging Face hub
 on:
   push:
-    branches: [main]
-  # Permet de lancer le déploiement manuellement si besoin
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -12,12 +11,24 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          lfs: true
+
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Remplace TON_PSEUDO et TON_SPACE_NAME
-          # Exemple : git remote add subtitle https://baadjis:$HF_TOKEN@huggingface.co/spaces/baadjis/utilitybox
+          # 1. Configurer l'identité Git pour l'Action
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          # 2. Créer une branche temporaire vide d'historique (Orphan)
+          git checkout --orphan temp-branch
+          
+          # 3. Ajouter UNIQUEMENT les fichiers actuels
+          git add .
+          
+          # 4. Faire un commit tout neuf (sans l'image fantôme dans le passé)
+          git commit -m "Deploying clean version of the app"
+
+          # 5. Pousser vers Hugging Face en forçant sur la branche main du Space
           git remote add hf https://baadjis:$HF_TOKEN@huggingface.co/spaces/baadjis/utilitybox
-          git push --force hf main
+          git push --force hf temp-branch:main
