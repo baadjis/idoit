@@ -10,4 +10,4 @@ pinned: false
 ---
 
 # UtilityBox - QR, Barcode & Image Tools
-Générateur gratuit .
+Générateur gratuit.
