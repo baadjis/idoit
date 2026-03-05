@@ -1,0 +1,23 @@
+name: Sync to Hugging Face hub
+on:
+  push:
+    branches: [main]
+  # Permet de lancer le déploiement manuellement si besoin
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Push to hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Remplace TON_PSEUDO et TON_SPACE_NAME
+          # Exemple : git remote add subtitle https://baadjis:$HF_TOKEN@huggingface.co/spaces/baadjis/utilitybox
+          git remote add hf https://baadjis:$HF_TOKEN@huggingface.co/spaces/baadjis/utilitybox
+          git push --force hf main
