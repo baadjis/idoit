@@ -137,14 +137,23 @@ custom_style = Style(f"""
     .legal-links a:hover {{ color: var(--primary); }}
 """)
 
-# --- INITIALISATION DE L'APP ---
+
+
+from starlette.responses import PlainTextResponse
+
+# --- INITIALISATION ---
 app, rt = fast_app(hdrs=(
     *meta_tags,
     Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"),
     custom_style,
-    adsense_script, # Code AdSense inséré ici
+    adsense_script,
     Script(src="https://unpkg.com/lucide@latest")
 ))
+
+# --- MÉTHODE RADICALE POUR ADS.TXT ---
+@app.route("/ads.txt")
+def ads_txt(request):
+    return Pl
 
 # --- COMPOSANTS ---
 
@@ -225,12 +234,7 @@ def DataRow(name="keys", val_name="values"):
 
 # --- ROUTES ---
 
-@rt("/ads.txt")
-def get():
-    return Response(
-        "google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0", 
-        media_type="text/plain"
-    )
+
 
 @rt("/")
 def get():
