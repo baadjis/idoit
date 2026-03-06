@@ -230,18 +230,83 @@ def DataRow(name="keys", val_name="values"):
         cls="key-value-row", style="display:grid; grid-template-columns: 1fr 1fr 50px; gap:10px; margin-bottom:12px;"
     )
 
+def SeoContent():
+    return Section(
+        Div(
+            # Titre principal avec mots-clés de recherche
+            H2("Générer vos QR Codes, Codes-barres et Détourages IA gratuitement", 
+               style="margin-top:2rem; font-size: 2.2rem;"),
+            P("""Besoin de créer des supports marketing ou de gérer un inventaire ? 
+              UtilityBox vous permet de générer facilement tous vos outils digitaux essentiels. 
+              Accédez à des services de haute précision, 100% gratuits et sans inscription."""),
+            
+            Grid(
+                # QR Code - Instructif
+                Div(
+                    H4("🚀 Comment générer un QR Code personnalisé ?"),
+                    P("""Pour générer votre QR Code, entrez simplement une URL ou des données texte. 
+                      Notre outil crée instantanément un fichier haute résolution compatible avec tous les smartphones. 
+                      C'est la solution idéale pour vos menus de restaurant, flyers ou cartes de visite. 
+                      Vous pouvez même ajouter votre logo pour un rendu professionnel et unique.""")
+                ),
+                # Barcode - Instructif
+                Div(
+                    H4("🔢 Créer des codes-barres EAN-13 et Code 128"),
+                    P("""Utilisez notre générateur pour créer des codes-barres standards. 
+                      Saisissez 12 chiffres pour un format EAN-13 (commerce) ou du texte pour le Code 128 (logistique). 
+                      Nos étiquettes sont optimisées pour être lues par toutes les douchettes et scanners laser, 
+                      facilitant ainsi la gestion de vos stocks et de vos points de vente.""")
+                ),
+                # RemBg - Instructif
+                Div(
+                    H4("🖼️ Enlever le fond d'une image avec l'IA"),
+                    P("""Téléchargez votre photo et laissez notre Intelligence Artificielle enlever l'arrière-plan. 
+                      Ce détourage automatique est parfait pour vos fiches produits e-commerce ou vos portraits. 
+                      Obtenez un fichier PNG transparent en qualité studio en moins de 10 secondes, 
+                      sans avoir besoin de maîtriser Photoshop.""")
+                )
+            ),
+            
+            H3("Des outils utilitaires en ligne, sécurisés et rapides", style="margin-top:2.5rem;"),
+            P("""Que vous cherchiez à générer un code QR pour un site web ou à détourer une image complexe, 
+              UtilityBox garantit un traitement immédiat. Toutes les données sont traitées localement 
+              en mémoire vive : vos fichiers et informations ne sont jamais stockés. Profitez d'une suite logicielle 
+              web robuste pour tous vos besoins quotidiens en bureautique et design."""),
+            
+            cls="modern-card", style="margin-top:3rem; padding: 3rem; line-height: 1.8;"
+        )
+    )
+
+
 # --- ROUTES ---
-
-
-
 @rt("/")
 def get():
     cards = Grid(
-        Card(H3("📱 QR Code"), P("Créez des QR codes pour vos liens ou fiches de données."), Footer(A(Button("Ouvrir"), href="/qr-tab")), cls="modern-card"),
-        Card(H3("🔢 Barcode"), P("Formats standards EAN-13, UPC et Code 128."), Footer(A(Button("Ouvrir"), href="/barcode-tab")), cls="modern-card"),
-        Card(H3("🖼️ RemBg"), P("Détourage IA haute précision en un clic."), Footer(A(Button("Ouvrir"), href="/rembg-tab")), cls="modern-card"),
+        Card(
+            Div(Safe('<i data-lucide="qr-code" style="width: 48px; height: 48px; color: var(--primary); margin-bottom: 1rem;"></i>')),
+            H3("Générer QR Code"), 
+            P("Créez facilement des codes QR HD avec logo pour vos liens et fiches de données."), 
+            Footer(A(Button("Lancer l'outil"), href="/qr-tab")), 
+            cls="modern-card", style="text-align: center;"
+        ),
+        Card(
+            Div(Safe('<i data-lucide="barcode" style="width: 48px; height: 48px; color: var(--primary); margin-bottom: 1rem;"></i>')),
+            H3("Générer Barcode"), 
+            P("Créer des codes-barres EAN-13, UPC et Code 128 pour vos étiquettes de produits."), 
+            Footer(A(Button("Lancer l'outil"), href="/barcode-tab")), 
+            cls="modern-card", style="text-align: center;"
+        ),
+        Card(
+            Div(Safe('<i data-lucide="image" style="width: 48px; height: 48px; color: var(--primary); margin-bottom: 1rem;"></i>')),
+            H3("Détourer Image"), 
+            P("Enlever le fond d'une image gratuitement grâce à notre IA de détourage haute précision."), 
+            Footer(A(Button("Lancer l'outil"), href="/rembg-tab")), 
+            cls="modern-card", style="text-align: center;"
+        ),
     )
-    return Layout(cards, "Accueil")
+    
+    content = Div(cards, SeoContent())
+    return Layout(content, "Accueil")
 
 @rt("/qr-tab")
 def get():
