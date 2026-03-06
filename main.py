@@ -142,13 +142,16 @@ custom_style = Style(f"""
 from starlette.responses import PlainTextResponse
 
 # --- INITIALISATION ---
-app, rt = fast_app(hdrs=(
-    *meta_tags,
-    Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"),
-    custom_style,
-    adsense_script,
-    Script(src="https://unpkg.com/lucide@latest")
-))
+app, rt = fast_app(
+    static_path='public',
+    hdrs=(
+        *meta_tags,
+        Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"),
+        custom_style,
+        adsense_script,
+        Script(src="https://unpkg.com/lucide@latest")
+    )
+)
 
 # --- MÉTHODE RADICALE POUR ADS.TXT ---
 # On utilise directement l'instance Starlette 'app' pour court-circuiter le moteur HTML
