@@ -473,7 +473,7 @@ def get():
         Card(
             H4("📧 Support Email"),
             P("Pour toute demande technique ou partenariat :"),
-            A("support@utilitybox.tools", href="mailto:support@utilitybox.tools", style="font-size: 1.2rem; font-weight: bold; color: var(--primary);"),
+            A("support@utilitybox.tools", href="mailto:utilitybox.project@gmail.com", style="font-size: 1.2rem; font-weight: bold; color: var(--primary);"),
             style="text-align: center; padding: 2rem; border-radius: 20px; border: 1px solid #e2e8f0;"
         ),
         P("Nous nous efforçons de répondre sous 48 heures ouvrées.", style="margin-top: 2rem; text-align: center; opacity: 0.7;"),
