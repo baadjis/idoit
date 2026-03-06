@@ -166,32 +166,31 @@ def Logo():
         H1("UtilityBox", style="margin:0; font-size: 1.8rem; font-weight: 800;"),
         cls="logo-container"
     )
-
 def FooterSection():
     return Footer(
         Div(
             Div(
-                H4("📜 Terms of Use"),
-                P("UtilityBox fournit des outils de génération et de traitement d'image gratuits. En utilisant ce site, vous acceptez que les fichiers générés soient sous votre entière responsabilité."),
+                H4("📜 Conditions d'Utilisation"),
+                P("UtilityBox fournit des outils gratuits pour les créatifs. En utilisant ce site, vous acceptez nos conditions de service et l'usage responsable de nos outils."),
                 cls="footer-section"
             ),
             Div(
-                H4("👤 UGC & Privacy"),
-                P("User Generated Content (UGC) : Vous êtes propriétaire des contenus créés. Nous ne stockons, ne vendons et ne consultons jamais vos images ou données privées."),
+                H4("👤 UGC & Propriété"),
+                P("Vous restez propriétaire à 100% des fichiers générés (QR, Barcodes). Nous ne revendiquons aucun droit sur vos créations."),
                 cls="footer-section"
             ),
             Div(
-                H4("🛡️ Sécurité"),
-                P("Toutes les opérations sont effectuées de manière volatile. Aucune donnée n'est conservée sur nos serveurs après la fermeture de votre session."),
+                H4("🛡️ Confidentialité"),
+                P("Nous utilisons l'IA en mémoire vive. Aucune image n'est sauvegardée. Votre vie privée est notre priorité absolue."),
                 cls="footer-section"
             ),
             cls="footer-content"
         ),
         Div(
-            A("Conditions Générales", href="#"),
-            A("Politique de Confidentialité", href="#"),
-            A("Contact Support", href="#"),
-            Span(f"© {CURRENT_YEAR} UtilityBox • Made for Professionals"),
+            A("Conditions Générales", href="/terms"),
+            A("Politique de Confidentialité", href="/privacy"),
+            A("Contact", href="/contact"),
+            Span(f"© {CURRENT_YEAR} UtilityBox • Outils Premium Gratuits"),
             cls="legal-links"
         ),
         cls="pro-footer"
@@ -432,6 +431,55 @@ async def post_bg(image:UploadFile):
     img_str = base64.b64encode(res).decode()
     return Div(Img(src=f"data:image/png;base64,{img_str}"), Br(), A(Button("⬇️ Télécharger", cls="btn-download"), href=f"data:image/png;base64,{img_str}", download="nobg.png"), cls="output-box")
 
+
+# --- PAGE : CONDITIONS GÉNÉRALES ---
+@rt("/terms")
+def get():
+    content = Div(
+        H2("Conditions Générales d'Utilisation"),
+        P("Dernière mise à jour : Mars 2026", style="opacity: 0.6; font-size: 0.9rem;"),
+        H4("1. Description du Service"),
+        P("UtilityBox met à disposition des outils de génération de QR codes, de codes-barres et de traitement d'images. Le service est fourni 'en l'état' sans garantie de disponibilité permanente."),
+        H4("2. Utilisation Responsable"),
+        P("L'utilisateur s'engage à ne pas utiliser nos outils pour générer du contenu illégal, haineux ou frauduleux. UtilityBox se réserve le droit de bloquer l'accès en cas d'abus."),
+        H4("3. Limitation de Responsabilité"),
+        P("UtilityBox ne pourra être tenu responsable des pertes de données ou des erreurs de lecture de codes-barres/QR codes dans un contexte commercial."),
+        cls="modern-card", style="max-width: 800px; margin: auto; padding: 3rem;"
+    )
+    return Layout(content, "Conditions")
+
+# --- PAGE : POLITIQUE DE CONFIDENTIALITÉ ---
+@rt("/privacy")
+def get():
+    content = Div(
+        H2("Politique de Confidentialité"),
+        P("Votre vie privée est au cœur de notre développement.", style="font-weight: bold;"),
+        H4("1. Traitement des images (RemBg)"),
+        P("Lorsque vous utilisez notre outil de suppression d'arrière-plan, l'image est envoyée à notre serveur, traitée instantanément par notre IA en mémoire vive (RAM), puis renvoyée. L'image n'est jamais écrite sur un disque dur et est supprimée immédiatement après le traitement."),
+        H4("2. Cookies et Publicité"),
+        P("Nous utilisons Google AdSense pour diffuser des annonces. Google peut utiliser des cookies pour diffuser des annonces basées sur vos visites précédentes sur ce site ou sur d'autres sites Web."),
+        H4("3. Aucune collecte de données personnelles"),
+        P("UtilityBox ne demande pas d'inscription et ne collecte aucun nom, email ou adresse IP à des fins marketing."),
+        cls="modern-card", style="max-width: 800px; margin: auto; padding: 3rem;"
+    )
+    return Layout(content, "Confidentialité")
+
+# --- PAGE : CONTACT ---
+@rt("/contact")
+def get():
+    content = Div(
+        H2("Contactez-nous"),
+        P("Une question ou une suggestion ? Nous sommes à votre écoute."),
+        Card(
+            H4("📧 Support Email"),
+            P("Pour toute demande technique ou partenariat :"),
+            A("support@utilitybox.tools", href="mailto:support@utilitybox.tools", style="font-size: 1.2rem; font-weight: bold; color: var(--primary);"),
+            style="text-align: center; padding: 2rem; border-radius: 20px; border: 1px solid #e2e8f0;"
+        ),
+        P("Nous nous efforçons de répondre sous 48 heures ouvrées.", style="margin-top: 2rem; text-align: center; opacity: 0.7;"),
+        cls="modern-card", style="max-width: 600px; margin: auto; padding: 3rem;"
+    )
+    return Layout(content, "Contact")
 if __name__ == "__main__":
     import uvicorn
     import os
