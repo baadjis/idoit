@@ -1,3 +1,4 @@
+from fastapi.responses import PlainTextResponse
 from fasthtml.common import *
 import qrcode
 import base64
@@ -223,6 +224,10 @@ def DataRow(name="keys", val_name="values"):
     )
 
 # --- ROUTES ---
+@rt("/ads.txt")
+def get():
+    # Remplacez pub-4081303157053373 par votre ID si besoin, Google le demande
+    return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
 
 @rt("/")
 def get():
@@ -312,10 +317,6 @@ def get():
     return Layout(content, "RemBg")
 
 # --- ROUTES SPÉCIALES ADSENSE ---
-@rt("/ads.txt")
-def get():
-    # Remplacez pub-4081303157053373 par votre ID si besoin, Google le demande
-    return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
 
 # --- LOGIQUE POST ---
 @rt("/generate-qrcode", methods=["POST"])
