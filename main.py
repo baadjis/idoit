@@ -1,4 +1,4 @@
-from fastapi.responses import PlainTextResponse
+from starlette.responses import PlainTextResponse
 from fasthtml.common import *
 import qrcode
 import base64
