@@ -153,7 +153,7 @@ app, rt = fast_app(hdrs=(
 # --- MÉTHODE RADICALE POUR ADS.TXT ---
 @app.route("/ads.txt")
 def ads_txt(request):
-    return Pl
+    return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
 
 # --- COMPOSANTS ---
 
