@@ -11,17 +11,25 @@ from PIL import Image
 # --- CONFIGURATION ---
 CURRENT_YEAR = datetime.now().year
 
+# --- GOOGLE ADSENSE SCRIPT ---
+# Intégration correcte pour FastHTML
+adsense_script = Script(
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4081303157053373",
+    async_=True,
+    crossorigin="anonymous"
+)
+
 # --- SEO & META TAGS ---
 meta_tags = (
-    Meta(name="description", content="UtilityBox - Générateur gratuit de QR Code pro, Code-barres (EAN, UPC, Code 128) et suppression d'arrière-plan par IA. Rapide, sécurisé et sans inscription."),
-    Meta(name="keywords", content="QR Code, Barcode, Code-barres, Background Remover, IA, Outil Gratuit, EAN13, Code128, PNG, Générateur"),
-    Meta(property="og:title", content="UtilityBox | Outils Premium Gratuits"),
-    Meta(property="og:description", content="Générez vos codes et traitez vos images en un clic."),
+    Meta(name="description", content="UtilityBox - Outil pro gratuit : Générateur de QR Code, Code-barres EAN/Code128 et suppression d'arrière-plan IA. Sans inscription, 100% sécurisé."),
+    Meta(name="keywords", content="QR Code, Barcode, Code-barres, Rembg, Suppression fond, IA gratuite, EAN13, Code128, PNG, PDF"),
+    Meta(property="og:title", content="UtilityBox | QR, Barcode & AI Background Remover"),
+    Meta(property="og:description", content="Traitez vos images et générez vos codes en un clic avec nos outils premium gratuits."),
     Meta(property="og:type", content="website"),
     Meta(name="viewport", content="width=device-width, initial-scale=1")
 )
 
-# --- DESIGN SPLENDIDE MIS À JOUR ---
+# --- DESIGN SPLENDIDE (MESH & BOUTONS COHÉRENTS) ---
 custom_style = Style(f"""
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
     
@@ -36,8 +44,8 @@ custom_style = Style(f"""
         margin: 0;
         background-color: #f8fafc;
         background-image: 
-            radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%);
+            radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.12) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(147, 51, 234, 0.12) 0px, transparent 50%);
         background-attachment: fixed;
         min-height: 100vh;
     }}
@@ -62,30 +70,33 @@ custom_style = Style(f"""
         margin-bottom: 0.5rem;
     }}
 
+    /* HARMONISATION DES BOUTONS (Comme les Nav-Pills) */
     .nav-pills {{ display: flex; gap: 0.8rem; justify-content: center; margin: 2rem 0; }}
     
-    /* Boutons et Tabs Coherents */
-    .nav-pills a, button:not(.secondary) {{
-        padding: 0.7rem 1.6rem !important; 
+    .nav-pills a, button:not(.outline), .btn-download {{
+        padding: 0.8rem 1.8rem !important; 
         border-radius: 16px !important; 
         text-decoration: none;
         background: white !important; 
         color: #475569 !important; 
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         border: 1px solid #e2e8f0 !important; 
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         display: inline-flex; align-items: center; gap: 8px;
         cursor: pointer;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        width: auto;
     }}
 
-    .nav-pills a.active, button:not(.secondary):hover {{ 
+    .nav-pills a.active, button:not(.outline):hover, .btn-download:hover {{ 
         background: #4f46e5 !important; 
         color: white !important; 
         border-color: #4f46e5 !important;
         box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3) !important;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
     }}
+
+    button:not(.outline) {{ width: 100%; justify-content: center; margin-top: 10px; }}
 
     .app-grid {{
         display: grid; grid-template-columns: 1fr 320px; gap: 2.5rem;
@@ -95,33 +106,42 @@ custom_style = Style(f"""
     @media (max-width: 1000px) {{ .app-grid {{ grid-template-columns: 1fr; }} .sidebar {{ display: none; }} }}
 
     .sidebar-ad {{
-        position: sticky; top: 2rem; height: 600px;
+        position: sticky; top: 2rem; min-height: 600px;
         background: rgba(0,0,0,0.02); border: 2px dashed #cbd5e1;
         border-radius: 28px; display: flex; align-items: center; justify-content: center;
     }}
 
     .logo-container {{ display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; }}
-    .key-value-row {{ display: grid; grid-template-columns: 1fr 1fr 50px; gap: 10px; margin-bottom: 12px; }}
     .output-box {{ margin-top: 2rem; padding: 2rem; border-radius: 24px; background: white; border: 1px solid #f1f5f9; text-align: center; }}
     
+    /* FOOTER LÉGAL PROFESSIONNEL */
     footer.pro-footer {{
-        background: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.4);
         border-top: 1px solid #e2e8f0;
-        padding: 4rem 1rem;
+        padding: 4rem 1rem 2rem 1rem;
         margin-top: 5rem;
     }}
     .footer-content {{
-        max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem;
+        max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem;
     }}
-    .footer-section h4 {{ font-size: 1.1rem; font-weight: 700; margin-bottom: 1.2rem; color: #1e293b; }}
-    .footer-section p, .footer-section li {{ font-size: 0.9rem; color: #64748b; line-height: 1.6; list-style: none; padding: 0; }}
-    .legal-links {{ display: flex; gap: 15px; margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 2rem; justify-content: center; font-size: 0.8rem; }}
+    .footer-section h4 {{ font-size: 1.1rem; font-weight: 800; margin-bottom: 1.2rem; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em; }}
+    .footer-section p {{ font-size: 0.85rem; color: #64748b; line-height: 1.7; }}
+    .legal-links {{ 
+        display: flex; flex-wrap: wrap; gap: 20px; margin-top: 3rem; 
+        border-top: 1px solid #e2e8f0; padding-top: 2rem; 
+        justify-content: center; font-size: 0.8rem; font-weight: 600;
+        color: #94a3b8;
+    }}
+    .legal-links a {{ color: #64748b; text-decoration: none; }}
+    .legal-links a:hover {{ color: var(--primary); }}
 """)
 
+# --- INITIALISATION DE L'APP ---
 app, rt = fast_app(hdrs=(
     *meta_tags,
     Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"),
     custom_style,
+    adsense_script, # Code AdSense inséré ici
     Script(src="https://unpkg.com/lucide@latest")
 ))
 
@@ -143,27 +163,27 @@ def FooterSection():
     return Footer(
         Div(
             Div(
-                H4("À propos d'UtilityBox"),
-                P("UtilityBox est une plateforme d'outils utilitaires premium conçue pour les professionnels et les créatifs. Nous mettons l'accent sur la rapidité et la protection de vos données."),
+                H4("📜 Terms of Use"),
+                P("UtilityBox fournit des outils de génération et de traitement d'image gratuits. En utilisant ce site, vous acceptez que les fichiers générés soient sous votre entière responsabilité."),
                 cls="footer-section"
             ),
             Div(
-                H4("Politique UGC"),
-                P("Contenu généré par l'utilisateur (UGC) : Vous restez propriétaire à 100% des fichiers générés. Nous ne stockons aucun de vos fichiers ou images sur nos serveurs."),
+                H4("👤 UGC & Privacy"),
+                P("User Generated Content (UGC) : Vous êtes propriétaire des contenus créés. Nous ne stockons, ne vendons et ne consultons jamais vos images ou données privées."),
                 cls="footer-section"
             ),
             Div(
-                H4("Sécurité"),
-                P("Tous les traitements (IA, QR, Barcodes) sont effectués en mémoire vive et supprimés instantanément après téléchargement."),
+                H4("🛡️ Sécurité"),
+                P("Toutes les opérations sont effectuées de manière volatile. Aucune donnée n'est conservée sur nos serveurs après la fermeture de votre session."),
                 cls="footer-section"
             ),
             cls="footer-content"
         ),
         Div(
-            A("Conditions d'utilisation", href="#"),
-            A("Politique de confidentialité", href="#"),
-            A("Contact", href="#"),
-            Span(f"© {CURRENT_YEAR} UtilityBox - Tous droits réservés."),
+            A("Conditions Générales", href="#"),
+            A("Politique de Confidentialité", href="#"),
+            A("Contact Support", href="#"),
+            Span(f"© {CURRENT_YEAR} UtilityBox • Made for Professionals"),
             cls="legal-links"
         ),
         cls="pro-footer"
@@ -179,7 +199,14 @@ def Layout(content, active_page, title="UtilityBox"):
         ),
         Div(
             Section(content),
-            Aside(Div(P("Espace Partenaire", style="font-size:0.7rem; color:#94a3b8"), cls="sidebar-ad"), cls="sidebar"),
+            Aside(
+                Div(
+                    P("Espace Publicitaire", style="font-size:0.7rem; color:#94a3b8; margin-bottom:10px"), 
+                    # Ici s'affichera la pub automatique de Google
+                    cls="sidebar-ad"
+                ), 
+                cls="sidebar"
+            ),
             cls="app-grid"
         ),
         FooterSection(),
@@ -191,8 +218,8 @@ def DataRow(name="keys", val_name="values"):
     return Div(
         Input(name=name, placeholder="Clé (ex: Nom)"),
         Input(name=val_name, placeholder="Valeur"),
-        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", cls="outline secondary", onclick="this.parentElement.remove()", style="padding: 10px; border:none !important; background:transparent !important;"),
-        cls="key-value-row"
+        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", cls="outline secondary", onclick="this.parentElement.remove()", style="padding: 10px; border:none; background:transparent;"),
+        cls="key-value-row", style="display:grid; grid-template-columns: 1fr 1fr 50px; gap:10px; margin-bottom:12px;"
     )
 
 # --- ROUTES ---
@@ -200,7 +227,7 @@ def DataRow(name="keys", val_name="values"):
 @rt("/")
 def get():
     cards = Grid(
-        Card(H3("📱 QR Code"), P("Générez des QR codes pour liens ou fiches de données."), Footer(A(Button("Ouvrir"), href="/qr-tab")), cls="modern-card"),
+        Card(H3("📱 QR Code"), P("Créez des QR codes pour vos liens ou fiches de données."), Footer(A(Button("Ouvrir"), href="/qr-tab")), cls="modern-card"),
         Card(H3("🔢 Barcode"), P("Formats standards EAN-13, UPC et Code 128."), Footer(A(Button("Ouvrir"), href="/barcode-tab")), cls="modern-card"),
         Card(H3("🖼️ RemBg"), P("Détourage IA haute précision en un clic."), Footer(A(Button("Ouvrir"), href="/rembg-tab")), cls="modern-card"),
     )
@@ -284,8 +311,13 @@ def get():
     )
     return Layout(content, "RemBg")
 
-# --- LOGIQUE POST ---
+# --- ROUTES SPÉCIALES ADSENSE ---
+@rt("/ads.txt")
+def get():
+    # Remplacez pub-4081303157053373 par votre ID si besoin, Google le demande
+    return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
 
+# --- LOGIQUE POST ---
 @rt("/generate-qrcode", methods=["POST"])
 async def post_qr(qr_type:str, url:str=None, qr_keys:list=None, qr_values:list=None, fill_color:str="#000000", back_color:str="#ffffff", logo:UploadFile=None):
     content = url if qr_type == "url" else ""
@@ -306,7 +338,7 @@ async def post_qr(qr_type:str, url:str=None, qr_keys:list=None, qr_values:list=N
     buf = BytesIO()
     img.save(buf, format="PNG")
     img_str = base64.b64encode(buf.getvalue()).decode()
-    return Div(Img(src=f"data:image/png;base64,{img_str}", style="max-width:280px"), Br(), A(Button("⬇️ Télécharger PNG"), href=f"data:image/png;base64,{img_str}", download="qrcode.png"), cls="output-box")
+    return Div(Img(src=f"data:image/png;base64,{img_str}", style="max-width:280px"), Br(), A(Button("⬇️ Télécharger PNG", cls="btn-download"), href=f"data:image/png;base64,{img_str}", download="qrcode.png"), cls="output-box")
 
 @rt("/generate-barcode", methods=["POST"])
 async def post_bc(barcode_type:str, data:str=None, keys:list=None, values:list=None):
@@ -320,14 +352,14 @@ async def post_bc(barcode_type:str, data:str=None, keys:list=None, values:list=N
         buf = BytesIO()
         my_bc.write(buf)
         img_str = base64.b64encode(buf.getvalue()).decode()
-        return Div(Img(src=f"data:image/png;base64,{img_str}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{img_str}", download="barcode.png"), cls="output-box")
+        return Div(Img(src=f"data:image/png;base64,{img_str}"), Br(), A(Button("⬇️ Télécharger", cls="btn-download"), href=f"data:image/png;base64,{img_str}", download="barcode.png"), cls="output-box")
     except Exception as e: return Div(f"Erreur format: {e}", cls="error-msg")
 
 @rt("/remove-background", methods=["POST"])
 async def post_bg(image:UploadFile):
     res = remove(await image.read())
     img_str = base64.b64encode(res).decode()
-    return Div(Img(src=f"data:image/png;base64,{img_str}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{img_str}", download="nobg.png"), cls="output-box")
+    return Div(Img(src=f"data:image/png;base64,{img_str}"), Br(), A(Button("⬇️ Télécharger", cls="btn-download"), href=f"data:image/png;base64,{img_str}", download="nobg.png"), cls="output-box")
 
 if __name__ == "__main__":
     import uvicorn
