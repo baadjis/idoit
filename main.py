@@ -210,7 +210,7 @@ def Layout(content, active_page, title="UtilityBox"):
     return Title(f"{active_page} | {title}"), Main(
         Header(
             Logo(),
-            Div(H1("Boostez votre productivité", cls="hero-title"), P("Outils premium, gratuits et sécurisés."), style="text-align:center; padding:0 1rem;"),
+            Div(H1("Générez, Créez et Transformez en un clic", cls="hero-title"), P("Outils premium, gratuits et sécurisés."), style="text-align:center; padding:0 1rem;"),
             Div(
                 Nav(Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:18px"></i> {name}'), href=url, cls="active" if active_page == name else "") for name, url, icon in nav_items], cls="nav-pills")),
                 cls="nav-scroll-container"
