@@ -154,13 +154,6 @@ app, rt = fast_app(
 )
 
 # --- MÉTHODE RADICALE POUR ADS.TXT ---
-# On utilise directement l'instance Starlette 'app' pour court-circuiter le moteur HTML
-@app.get("/ads.txt")
-def get_ads():
-    return Response(
-        "google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0", 
-        media_type="text/plain"
-    )
 
 def Logo():
     return Div(
