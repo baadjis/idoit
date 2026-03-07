@@ -9,7 +9,7 @@ from barcode.writer import ImageWriter
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import os
-os.environ['U2NET_HOME'] = os.path.join(os.getcwd(), 'data/.u2net')
+os.environ['U2NET_HOME'] = '/app/data'
 
 # --- CONFIGURATION ---
 CURRENT_YEAR = datetime.now().year
