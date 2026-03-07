@@ -25,10 +25,10 @@ meta_tags = (
     Meta(name="keywords", content="Générer QR Code, Créer Barcode, EAN13 gratuit, Détourage IA, PNG transparent, Étiquettes commerce, UGC"),
     Meta(property="og:title", content="RetailBox | Outils de génération QR et Barcode"),
     Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
-    Meta(name="color-scheme", content="light")
+    Meta(name="color-scheme", content="light") # Force le mode clair
 )
 
-# --- DESIGN STABILISÉ (FORCÉ CLAIR ET SANS SOULIGNEMENT) ---
+# --- STYLE STABLE (ANTI-DARK MODE & ANTI-UNDERLINE) ---
 custom_style = Style(f"""
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
     
@@ -37,12 +37,12 @@ custom_style = Style(f"""
         --primary: #4f46e5;
         --pico-color: #0f172a !important; /* Noir profond */
         --pico-background-color: #ffffff !important;
-        color-scheme: light;
+        color-scheme: light !important;
     }}
 
-    /* Désactiver mode sombre iPhone/Android */
+    /* Neutralisation forcée du mode sombre système */
     @media (prefers-color-scheme: dark) {{
-        body, html, main, section, div, p, h1, h2, h3, h4, span, a, footer {{ 
+        body, html, main, section, div, p, h1, h2, h3, h4, span, a, footer, nav, article {{ 
             background-color: #ffffff !important; 
             color: #0f172a !important; 
         }}
@@ -52,24 +52,25 @@ custom_style = Style(f"""
     body {{
         margin: 0; padding: 0; background-color: #ffffff;
         background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%);
-        min-height: 100vh; color: #0f172a;
+        min-height: 100vh; color: #0f172a !important;
     }}
 
-    /* Suppression des traits sous les liens */
-    a, a:hover, a:focus {{ text-decoration: none !important; color: inherit; border: none !important; outline: none !important; }}
+    /* Suppression totale des soulignements sur les liens */
+    a {{ text-decoration: none !important; border: none !important; }}
+    a:hover {{ text-decoration: none !important; opacity: 0.8; }}
 
     .hero-title {{
         font-size: clamp(1.8rem, 8vw, 3rem); font-weight: 800;
-        color: #0f172a; line-height: 1.2;
+        color: #0f172a !important; line-height: 1.2;
     }}
 
-    /* --- BOUTONS --- */
+    /* --- BOUTONS UNIFORMES --- */
     .nav-pills a, button, .btn-download {{
         padding: 0.7rem 1.4rem !important; border-radius: 12px !important;
         background: #f1f5f9 !important; color: #0f172a !important;
         font-weight: 700 !important; border: 1px solid #e2e8f0 !important;
         display: inline-flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: 0.2s;
+        cursor: pointer; transition: 0.2s; text-decoration: none !important;
     }}
 
     .nav-pills a.active, button:not(.secondary):hover, .btn-download:hover {{
@@ -80,41 +81,42 @@ custom_style = Style(f"""
     /* --- CARTES ET BOUTONS LARGEUR TOTALE --- */
     .modern-card {{
         background: #f8fafc; border: 1px solid #e2e8f0;
-        padding: 1.5rem; border-radius: 20px; color: #0f172a;
+        padding: 1.5rem; border-radius: 20px; color: #0f172a !important;
+        height: 100%; display: flex; flex-direction: column;
     }}
     .modern-card footer {{
         background: transparent !important; border-top: 1px solid #e2e8f0;
-        padding: 1rem 0 0 0 !important; margin-top: 1rem !important;
+        padding: 1rem 0 0 0 !important; margin-top: auto !important;
     }}
     .modern-card footer a, .modern-card footer button {{
-        width: 100% !important; /* Toute la largeur */
-        display: flex !important;
+        width: 100% !important; display: flex !important;
     }}
 
-    /* --- ESPACES PUB --- */
+    /* --- ESPACES PUB STABLES --- */
     .top-ad-banner {{
         width: 100%; max-width: 1100px; margin: 1rem auto;
         min-height: 90px; background: #f1f5f9; border: 1px dashed #cbd5e1;
         border-radius: 12px; display: flex; align-items: center; justify-content: center;
     }}
     .sidebar-ad {{
-        background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 20px;
+        background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 20px;
         min-height: 300px; display: flex; align-items: center; justify-content: center;
     }}
 
-    /* --- GRID --- */
+    /* --- GRID RÉACTIF --- */
     .app-grid {{
         display: grid; grid-template-columns: 1fr 320px; gap: 2rem;
-        max-width: 1100px; margin: auto; padding: 0 1rem;
+        max-width: 1200px; margin: auto; padding: 0 1rem;
     }}
     @media (max-width: 1024px) {{ .app-grid {{ grid-template-columns: 1fr; }} }}
 
     .nav-scroll-container {{ width: 100%; overflow-x: auto; padding: 10px 0; }}
     .nav-pills {{ display: flex; gap: 0.6rem; min-width: max-content; }}
 
-    footer.pro-footer {{ border-top: 1px solid #e2e8f0; padding: 3rem 1rem; margin-top: 5rem; }}
+    /* --- FOOTER FIXE --- */
+    footer.pro-footer {{ border-top: 1px solid #e2e8f0; padding: 3rem 1rem; margin-top: 5rem; background: #ffffff !important; }}
     .footer-content {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; max-width: 1200px; margin: auto; }}
-    .legal-links {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0; font-size: 0.85rem; }}
+    .legal-links {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0; font-size: 0.85rem; color: #64748b !important; }}
 """)
 
 app, rt = fast_app(
@@ -128,44 +130,42 @@ app, rt = fast_app(
     )
 )
 
-# --- CONTENU INSTRUCTIF (SEO) ---
+# --- COMPOSANTS INSTRUCTIFS (SEO) ---
 
 def SeoContent():
     return Section(
         Div(
-            H2("Guide : Comment générer vos fichiers techniques"),
+            H2("Instructions : Comment générer vos fichiers"),
             Grid(
                 Div(
-                    H4("Génération de QR Code"),
-                    P("1. Choisissez entre un lien URL ou une fiche texte. 2. Saisissez vos données. 3. Personnalisez les couleurs ou insérez un logo. 4. Téléchargez votre image haute définition pour impression.")
+                    H4("Générer un QR Code HD"),
+                    P("Entrez une URL ou du texte dans le formulaire. Choisissez vos couleurs et insérez votre logo. Cliquez sur 'Générer' pour créer un fichier PNG haute définition prêt pour l'impression ou le web.")
                 ),
                 Div(
-                    H4("Création de Code-barres"),
-                    P("1. Sélectionnez le format (EAN-13 pour commerce, Code 128 pour logistique). 2. Saisissez vos chiffres. 3. Obtenez instantanément une étiquette conforme aux scanners laser standards.")
+                    H4("Créer un Code-barres"),
+                    P("Sélectionnez le format standard (EAN-13 pour le commerce ou Code 128 pour l'industrie). Saisissez les données requises. Le système génère une étiquette conforme aux scanners laser.")
                 ),
                 Div(
-                    H4("Suppression de fond par IA"),
-                    P("1. Téléchargez une photo produit. 2. Notre Intelligence Artificielle détourre automatiquement le sujet. 3. Exportez le résultat en format PNG transparent sans action manuelle.")
+                    H4("Détourer une Image"),
+                    P("Téléchargez votre photo (JPG ou PNG). Notre Intelligence Artificielle traite l'image pour supprimer l'arrière-plan automatiquement. Téléchargez le résultat en PNG transparent instantanément.")
                 )
             ),
             cls="modern-card", style="margin-top:2rem;"
         )
     )
 
-# --- PAGES LÉGALES & FOOTER ---
-
 def FooterSection():
     return Footer(
         Div(
-            Div(H4("Technique"), P("Outils de génération gratuits. Traitement éphémère en mémoire vive."), cls="footer-section"),
-            Div(H4("Confidentialité"), P("Zéro stockage de vos photos ou données saisies."), cls="footer-section"),
-            Div(H4("Propriété (UGC)"), P("Vous êtes propriétaire exclusif des fichiers générés sur ce site."), cls="footer-section"),
+            Div(H4("Usage"), P("Génération gratuite de QR et Barcodes. Traitement immédiat en mémoire vive."), cls="footer-section"),
+            Div(H4("Vie Privée"), P("Zéro stockage. Vos photos et données ne sont jamais sauvegardées."), cls="footer-section"),
+            Div(H4("Propriété"), P("Vous êtes propriétaire à 100% des contenus générés (UGC)."), cls="footer-section"),
             cls="footer-content"
         ),
         Div(
             A("Conditions", href="/terms"), 
-            A("Vie Privée", href="/privacy"), 
-            A("Droits UGC", href="/ugc"), # NOUVEAU LIEN UGC
+            A("Confidentialité", href="/privacy"), 
+            A("Droits UGC", href="/ugc"),
             A("Contact", href="/contact"),
             Span(f"© {CURRENT_YEAR} RetailBox"),
             cls="legal-links"
@@ -181,8 +181,8 @@ def Layout(content, active_page, title="RetailBox"):
             Div(H1("Générez et Transformez en un clic", cls="hero-title"), style="text-align:center; margin-top:1rem;"),
             Div(Nav(Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:18px"></i> {name}'), href=url, cls="active" if active_page == name else "") for name, url, icon in nav_items], cls="nav-pills")), cls="nav-scroll-container")
         ),
-        Div(P("Annonce AdSense", style="font-size:0.6rem; opacity:0.4; margin:0"), cls="top-ad-banner"),
-        Div(Section(content), Aside(Div(P("Publicité", style="font-size:0.6rem; opacity:0.4"), cls="sidebar-ad"), cls="sidebar"), cls="app-grid"),
+        Div(P("Espace Publicitaire", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
+        Div(Section(content), Aside(Div(P("Publicité", style="font-size:0.6rem; opacity:0.5"), cls="sidebar-ad"), cls="sidebar"), cls="app-grid"),
         FooterSection(),
         Script("lucide.createIcons();"),
         cls="container"
@@ -196,31 +196,24 @@ def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f
 @rt("/")
 def get():
     cards = Grid(
-        Card(Div(Safe('<i data-lucide="qr-code" style="width:32px; color:var(--primary);"></i>')), H3("Générer QR Code"), P("Format HD pro avec logo."), Footer(A(Button("Ouvrir l'outil"), href="/qr-tab")), cls="modern-card"),
-        Card(Div(Safe('<i data-lucide="barcode" style="width:32px; color:var(--primary);"></i>')), H3("Générer Barcode"), P("EAN-13 et Code 128 standards."), Footer(A(Button("Ouvrir l'outil"), href="/barcode-tab")), cls="modern-card"),
-        Card(Div(Safe('<i data-lucide="image" style="width:32px; color:var(--primary);"></i>')), H3("Détourer Image"), P("Suppression fond par IA."), Footer(A(Button("Ouvrir l'outil"), href="/rembg-tab")), cls="modern-card"),
+        Card(Div(Safe('<i data-lucide="qr-code" style="width:32px; color:var(--primary);"></i>')), H3("QR Code"), P("Format HD pro avec logo pour vos liens produits."), Footer(A(Button("Ouvrir l'outil"), href="/qr-tab")), cls="modern-card"),
+        Card(Div(Safe('<i data-lucide="barcode" style="width:32px; color:var(--primary);"></i>')), H3("Barcode"), P("EAN-13 et Code 128 pour étiquettes et stocks."), Footer(A(Button("Ouvrir l'outil"), href="/barcode-tab")), cls="modern-card"),
+        Card(Div(Safe('<i data-lucide="image" style="width:32px; color:var(--primary);"></i>')), H3("RemBg"), P("Suppression fond par IA pour photos produits."), Footer(A(Button("Ouvrir l'outil"), href="/rembg-tab")), cls="modern-card"),
     )
     return Layout(Div(cards, SeoContent()), "Accueil")
 
-@rt("/ugc") # NOUVELLE ROUTE UGC
+@rt("/ugc")
 def get(): 
-    content = Div(
-        H2("Propriété des Contenus (UGC)"),
-        P("Chez RetailBox, nous croyons en la propriété totale des utilisateurs sur leur travail."),
-        H4("1. Propriété des fichiers"),
-        P("Tout contenu généré (User Generated Content) via nos outils de QR Code, Barcode ou détourage d'image appartient exclusivement à l'utilisateur qui l'a créé. RetailBox ne revendique aucun droit d'auteur sur vos fichiers."),
-        H4("2. Absence de stockage"),
-        P("Nous ne conservons aucune copie de vos créations. Une fois le fichier téléchargé et votre session terminée, les données sont définitivement effacées de notre mémoire vive."),
-        cls="modern-card"
-    )
-    return Layout(content, "Droits UGC")
+    return Layout(Div(H2("Droits UGC (Contenu Utilisateur)"), P("Chaque fichier généré sur RetailBox appartient à l'utilisateur. Nous ne revendiquons aucun droit sur vos QR Codes, Barcodes ou images détourées."), cls="modern-card"), "Droits UGC")
 
 @rt("/terms")
-def get(): return Layout(Div(H2("Conditions"), P("Service gratuit sans garantie. Usage professionnel autorisé."), cls="modern-card"), "Conditions")
+def get(): return Layout(Div(H2("Conditions de Service"), P("Le service est gratuit pour un usage personnel et commercial."), cls="modern-card"), "Conditions")
+
 @rt("/privacy")
-def get(): return Layout(Div(H2("Vie Privée"), P("Aucune image ou donnée n'est stockée sur nos serveurs."), cls="modern-card"), "Confidentialité")
+def get(): return Layout(Div(H2("Vie Privée"), P("Nous ne collectons aucune donnée personnelle. Les images sont traitées en mémoire vive et supprimées immédiatement."), cls="modern-card"), "Confidentialité")
+
 @rt("/contact")
-def get(): return Layout(Div(H2("Contact"), P("Email: utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
+def get(): return Layout(Div(H2("Contact"), P("Support par email : utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
 
 @rt("/qr-tab")
 def get():
