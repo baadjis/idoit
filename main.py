@@ -31,6 +31,37 @@ services = [
     ("wifi", "Accès Wi-Fi", "Connexion automatique sécurisée pour vos clients sans mot de passe.", "/wifi-qr"),
 ]
 
+faq_data = [
+    {
+        "q": "Comment générer un QR code pour mon menu restaurant PDF ?",
+        "a": "Hébergez votre menu sur Google Drive ou Dropbox, copiez le lien de partage public et utilisez notre outil 'QR Pro'. Vous pouvez même ajouter le logo de votre établissement pour un rendu professionnel."
+    },
+    {
+        "q": "Le générateur d'étiquettes de soldes est-il vraiment gratuit ?",
+        "a": "Oui, RetailBox permet de créer gratuitement des étiquettes avec prix barré et code-barres EAN-13. C'est un outil conçu pour aider les commerçants à préparer leurs périodes de promotions sans frais supplémentaires."
+    },
+    {
+        "q": "Comment regrouper Instagram, TikTok et Facebook dans un seul QR ?",
+        "a": "Utilisez notre service 'Identité Digitale'. En saisissant les liens de vos différents profils, vous générez une Social Card unique qui centralise toute votre présence en ligne pour vos clients."
+    },
+    {
+        "q": "Comment connecter mes clients au Wi-Fi sans donner le mot de passe ?",
+        "a": "Grâce à notre générateur de QR Code Wi-Fi, vous entrez le nom de votre réseau et la clé. Vos clients n'ont qu'à scanner le code avec leur smartphone pour être connectés instantanément et en toute sécurité."
+    },
+    {
+        "q": "Comment créer un lien QR direct vers mon WhatsApp ?",
+        "a": "Utilisez l'outil 'QR WhatsApp'. Entrez votre numéro de téléphone et un message de bienvenue automatique. Le QR code ouvrira directement une discussion avec votre boutique."
+    },
+    {
+        "q": "Peut-on supprimer l'arrière-plan d'une photo produit par IA ?",
+        "a": "Absolument. Notre outil 'RemBg' utilise une intelligence artificielle pour détourer automatiquement vos photos. Vous obtenez un fichier PNG transparent de qualité studio en moins de 10 secondes."
+    },
+    {
+        "q": "Quels formats de codes-barres sont disponibles pour mon stock ?",
+        "a": "Nous supportons le format EAN-13 (12 chiffres) pour les produits destinés à la vente, ainsi que le format Code 128 pour la logistique et l'inventaire interne de votre magasin."
+    }
+]
+
 # --- SEO & META TAGS ---
 meta_tags = (
     Meta(name="description", content="RetailBox - Identité digitale, étiquettes de soldes prix barré, QR Codes menu restaurant et codes-barres EAN13 gratuits."),
@@ -154,16 +185,7 @@ def SeoInstructional():
         )
     )
 
-def FaqSection():
-    return Section(
-        Div(
-            H2("Questions fréquentes sur RetailBox"),
-            Details(Summary("Comment générer un QR code pour mon menu restaurant PDF ?"), P("Utilisez notre outil 'QR Pro', collez le lien de votre PDF hébergé et téléchargez votre QR haute définition.")),
-            Details(Summary("Le générateur d'étiquettes de soldes est-il gratuit ?"), P("Oui, vous pouvez créer gratuitement des étiquettes prix barrés avec codes-barres pour vos rayons.")),
-            Details(Summary("Puis-je regrouper mes réseaux sociaux dans un seul QR ?"), P("Absolument. Notre service d'Identité Digitale regroupe TikTok, Instagram et Facebook dans une Social Card unique.")),
-            cls="faq-section"
-        )
-    )
+
 
 def Layout(content, active_page, title="RetailBox"):
     nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"), ("VCard", "/vcard", "contact"), ("Soldes", "/soldes", "tag"), ("RemBg", "/rembg-tab", "image")]
@@ -178,6 +200,19 @@ def Layout(content, active_page, title="RetailBox"):
         SeoInstructional(), FaqSection(),
         Footer(Div(Div(H4("Usage"), P("Génération gratuite en mémoire vive."), cls="footer-section"), Div(H4("Confidentialité"), P("Zéro stockage sur serveurs."), cls="footer-section"), Div(H4("Propriété"), P("100% droits UGC (User Generated Content)."), cls="footer-section"), cls="footer-content"), Div(A("Conditions", href="/terms"), A("Vie Privée", href="/privacy"), A("UGC", href="/ugc"), A("Contact", href="/contact"), Span(f"© {CURRENT_YEAR} RetailBox"), cls="legal-links"), cls="pro-footer"),
         Script("lucide.createIcons();"), cls="container"
+    )
+
+def FaqSection():
+    return Section(
+        Div(
+            H2("Questions fréquentes sur nos outils digitaux"),
+            # On génère dynamiquement chaque bloc FAQ à partir de la liste
+            *[Details(
+                Summary(item["q"]), 
+                P(item["a"])
+              ) for item in faq_data],
+            cls="faq-section"
+        )
     )
 
 def generate_qr_response(data, filename):
@@ -249,21 +284,93 @@ async def post(item:str, old_p:str, new_p:str, code:str):
         return Div(Img(src=f"data:image/png;base64,{s}"), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="tag.png"))
     except: return P("Erreur code", style="color:red")
 
+def DataRow(prefix):
+    return Div(
+        Input(name=f"{prefix}_keys", placeholder="Clé (ex: SKU)"),
+        Input(name=f"{prefix}_vals", placeholder="Valeur"),
+        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", 
+               onclick="this.parentElement.remove()", 
+               style="width:40px; background:transparent !important; border:none; color:red;"),
+        cls="key-value-row", 
+        style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-top:10px;"
+    )
+
 @rt("/barcode-tab")
 def get():
-    content = Div(H2("Barcode"), Form(Select(Option("EAN-13", value="ean13"), Option("Code 128", value="code128"), name="t", hx_get="/bc-f", hx_target="#f", hx_trigger="load, change"), Div(id="f"), Button("Générer"), hx_post="/gen-bc", hx_target="#o"), Div(id="o"), cls="modern-card")
+    content = Div(
+        H2("Générateur de Barcode Expert"),
+        P("Saisissez vos données ou créez une fiche technique pour votre inventaire."),
+        Form(
+            Label("Format du code-barres",
+                Select(
+                    Option("EAN-13 (Standard Commerce)", value="ean13"),
+                    Option("Code 128 (Logistique / Données)", value="code128", selected=True),
+                    name="t", 
+                    hx_get="/bc-f", 
+                    hx_target="#f",
+                    hx_trigger="load, change" 
+                )
+            ),
+            Div(id="f", style="margin-bottom:20px;"),
+            Button("🚀 Générer le Code-barres", cls="btn-full"),
+            hx_post="/gen-bc", hx_target="#o"
+        ),
+        Div(id="o"),
+        cls="modern-card"
+    )
     return Layout(content, "Barcode")
 
 @rt("/bc-f")
-def get(t:str): return Input(name="d", placeholder="Entrez 12 chiffres") if t=="ean13" else Input(name="d", placeholder="Données")
+def get(t:str):
+    if t == "ean13":
+        return Div(
+            Input(name="d", placeholder="Entrez 12 chiffres", required=True),
+            P("Le 13ème chiffre de contrôle est calculé automatiquement.", style="font-size:0.8rem; opacity:0.7;")
+        )
+    # Mode Key-Value pour Code 128
+    return Div(
+        Div(DataRow("bc"), id="bc-kv-list"),
+        Button("+ Ajouter une ligne", type="button", 
+               hx_get="/add-bc-row", hx_target="#bc-kv-list", hx_swap="beforeend",
+               cls="outline secondary", style="width:100%; margin-top:10px;"),
+        id="bc-kv-container"
+    )
+
+@rt("/add-bc-row")
+def get(): return DataRow("bc")
+
 
 @rt("/gen-bc", methods=["POST"])
-async def post(t:str, d:str):
+async def post(t:str, d:str=None, bc_keys:list=None, bc_vals:list=None):
     try:
-        bc = barcode.get_barcode_class(t)(d, writer=ImageWriter()); buf = BytesIO(); bc.write(buf); s = base64.b64encode(buf.getvalue()).decode()
-        return Div(Img(src=f"data:image/png;base64,{s}"), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="bc.png"))
-    except: return P("Erreur format", style="color:red")
+        final_data = ""
+        if t == "ean13":
+            final_data = d.strip()
+            if len(final_data) != 12: return P("Erreur : EAN-13 nécessite 12 chiffres.", style="color:red; font-weight:bold;")
+        else:
+            # Code 128 : On assemble les clés et valeurs
+            keys = [bc_keys] if isinstance(bc_keys, str) else bc_keys
+            vals = [bc_vals] if isinstance(bc_vals, str) else bc_vals
+            # On filtre les lignes vides
+            pairs = [f"{k}:{v}" for k, v in zip(keys, vals) if k and k.strip()]
+            final_data = " ".join(pairs)
+            if not final_data: return P("Erreur : Veuillez saisir au moins une donnée.", style="color:red;")
 
+        # Génération
+        bc_class = barcode.get_barcode_class(t)
+        buf = BytesIO()
+        bc_class(final_data, writer=ImageWriter()).write(buf)
+        s = base64.b64encode(buf.getvalue()).decode()
+        
+        return Div(
+            Img(src=f"data:image/png;base64,{s}", style="max-width:100%; border:1px solid #e2e8f0; border-radius:10px;"),
+            P(f"Données encodées : {final_data}", style="font-size:0.8rem; margin-top:0.5rem; font-family:monospace;"),
+            A(Button("⬇️ Télécharger le Barcode", cls="btn-full"), href=f"data:image/png;base64,{s}", download="barcode.png"),
+            style="text-align:center; padding-top:1.5rem;"
+        )
+    except Exception as e:
+        return P(f"Erreur technique : {str(e)}", style="color:red; font-weight:bold;")
+    
 @rt("/rembg-tab")
 def get():
     content = Div(H2("Détourage IA"), Form(Input(type="file", name="i", accept="image/*"), Button("Lancer l'IA"), hx_post="/gen-bg", hx_target="#o", hx_indicator="#l", enctype="multipart/form-data"), Div(id="l", cls="htmx-indicator", aria_busy="true"), Div(id="o"), cls="modern-card")
@@ -276,19 +383,105 @@ async def post(i:UploadFile):
 
 @rt("/qr-tab")
 def get():
-    content = Div(H2("QR Pro"), Form(Select(Option("URL", value="url"), Option("Fiche", value="kv"), name="m", hx_get="/qr-f", hx_target="#f", hx_trigger="load, change"), Div(id="f"), Grid(Label("QR", Input(type="color", name="fc")), Label("Fond", Input(type="color", name="bc", value="#ffffff"))), Label("Logo", Input(type="file", name="l")), Button("Générer"), hx_post="/gen-qr", hx_target="#o", enctype="multipart/form-data"), Div(id="o"), cls="modern-card")
+    content = Div(
+        H2("Générateur QR Code Pro"),
+        P("Personnalisez votre QR Code pour vos menus, boutiques ou réseaux sociaux."),
+        Form(
+            Label("Type de contenu", 
+                Select(
+                    Option("Lien URL Simple", value="url", selected=True), 
+                    Option("Fiche de données (Clé:Valeur)", value="kv"), 
+                    name="qr_mode", 
+                    hx_get="/qr-fields", 
+                    hx_target="#qr-inputs",
+                    hx_trigger="load, change"
+                )
+            ),
+            # Les champs (URL ou KV) s'injectent ici
+            Div(id="qr-inputs", style="margin-bottom:20px;"),
+            
+            # Grille de couleurs avec labels explicites
+            Grid(
+                Div(Label("Couleur du QR", Input(type="color", name="fc", value="#000000"))),
+                Div(Label("Couleur du Fond", Input(type="color", name="bc", value="#ffffff")))
+            ),
+            
+            Label("Logo central (PNG ou JPG)", Input(type="file", name="logo", accept="image/*")),
+            
+            Button("🚀 Générer le QR Code", cls="btn-full"),
+            hx_post="/gen-qr", hx_target="#qr-result", enctype="multipart/form-data"
+        ),
+        Div(id="qr-result"),
+        cls="modern-card"
+    )
     return Layout(content, "QR Pro")
 
-@rt("/qr-f")
-def get(m:str): return Input(name="u", placeholder="Entrez le lien") if m=="url" else Input(name="u", placeholder="Données")
+@rt("/qr-fields")
+def get(qr_mode:str):
+    if qr_mode == "url":
+        return Input(name="url", placeholder="Entrez le lien (ex: https://...)", required=True)
+    
+    # Mode Key-Value
+    return Div(
+        Div(DataRow("qr"), id="qr-kv-list"),
+        Button("+ Ajouter une information", type="button", 
+               hx_get="/add-qr-row", hx_target="#qr-kv-list", hx_swap="beforeend",
+               cls="outline secondary", style="width:100%; margin-top:10px;"),
+        id="qr-kv-container"
+    )
+
+@rt("/add-qr-row")
+def get(): return DataRow("qr")
+
 
 @rt("/gen-qr", methods=["POST"])
-async def post(u:str, fc:str, bc:str, l:UploadFile=None):
-    qr = qrcode.QRCode(border=4); qr.add_data(u); qr.make(fit=True); img = qr.make_image(fill_color=fc, back_color=bc).convert('RGB')
-    if l and l.size > 0:
-        log = Image.open(BytesIO(await l.read())); log.thumbnail((img.size[0]//4, img.size[1]//4)); img.paste(log, ((img.size[0]-log.size[0])//2, (img.size[1]-log.size[1])//2))
-    buf = BytesIO(); img.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
-    return Div(Img(src=f"data:image/png;base64,{s}"), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="qr.png"))
+async def post(qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=None, qr_vals:list=None, logo:UploadFile=None):
+    try:
+        # 1. Construction des données
+        if qr_mode == "url":
+            final_data = url.strip() if url else ""
+        else:
+            # Normalisation des listes (FastHTML envoie str si 1 ligne, list si plusieurs)
+            keys = [qr_keys] if isinstance(qr_keys, str) else (qr_keys or [])
+            vals = [qr_vals] if isinstance(qr_vals, str) else (qr_vals or [])
+            # Filtrage et assemblage
+            lines = [f"{k}: {v}" for k, v in zip(keys, vals) if k and k.strip()]
+            final_data = "\n".join(lines)
+
+        if not final_data: 
+            return P("Erreur : Aucune donnée saisie.", style="color:red; font-weight:bold;")
+
+        # 2. Création du QR Code
+        qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
+        qr.add_data(final_data)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color=fc, back_color=bc).convert('RGB')
+        
+        # 3. Ajout du Logo si présent
+        if logo and logo.size > 0:
+            log_img = Image.open(BytesIO(await logo.read()))
+            # Redimensionnement intelligent du logo (max 25% de la taille du QR)
+            size_ratio = 4 
+            logo_size = img.size[0] // size_ratio
+            log_img.thumbnail((logo_size, logo_size), Image.LANCZOS)
+            # Centrage
+            pos = ((img.size[0] - log_img.size[0]) // 2, (img.size[1] - log_img.size[1]) // 2)
+            img.paste(log_img, pos)
+            
+        # 4. Envoi de la réponse
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        s = base64.b64encode(buf.getvalue()).decode()
+        
+        return Div(
+            Img(src=f"data:image/png;base64,{s}", 
+                style="max-width:250px; margin: 2rem auto; border: 2px solid #e2e8f0; border-radius:16px; display:block;"),
+            A(Button("⬇️ Télécharger le QR Code PNG", cls="btn-full"), 
+              href=f"data:image/png;base64,{s}", download="qrcode-retailbox.png"),
+            style="text-align:center; padding-top:1.5rem;"
+        )
+    except Exception as e:
+        return P(f"Erreur technique : {str(e)}", style="color:red;")
 
 @rt("/wifi-qr")
 def get():
@@ -298,12 +491,77 @@ def get():
 # --- PAGES LEGALES ---
 @rt("/ads.txt")
 def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
-@rt("/ugc")
-def get(): return Layout(Div(H2("UGC"), P("Chaque fichier appartient à l'utilisateur."), cls="modern-card"), "UGC")
+
 @rt("/terms")
-def get(): return Layout(Div(H2("Conditions"), P("Service gratuit."), cls="modern-card"), "Conditions")
+def get():
+    content = Div(
+        H2("Conditions Générales d'Utilisation"),
+        P("Dernière mise à jour : Mars 2026", style="opacity: 0.6; font-size: 0.85rem;"),
+        
+        H4("1. Description du Service"),
+        P("RetailBox met à disposition des outils de génération de QR codes, de codes-barres techniques et de traitement d'images par IA. L'accès au service est gratuit et ne nécessite aucune inscription préalable."),
+        
+        H4("2. Utilisation autorisée et Interdictions"),
+        P("En utilisant ce site, vous vous engagez à respecter les règles suivantes :"),
+        Ul(
+            Li("Interdiction de générer des contenus frauduleux, trompeurs ou destinés à la contrefaçon de produits."),
+            Li("Interdiction d'intégrer des liens malveillants (phishing, virus) dans les QR codes générés."),
+            Li("Interdiction d'utiliser nos outils de manière automatisée (scripts, bots) pour saturer nos serveurs."),
+            Li("Le service ne doit pas être utilisé pour harceler des tiers via l'outil WhatsApp Direct.")
+        ),
+        
+        H4("3. Limitation de responsabilité"),
+        P("RetailBox décline toute responsabilité en cas d'erreur de lecture d'un code-barres ou d'un QR code suite à une mauvaise configuration utilisateur. Nous ne garantissons pas que les étiquettes de soldes générées soient conformes à toutes les réglementations locales d'affichage des prix."),
+        
+        H4("4. Disponibilité"),
+        P("Nous nous efforçons de maintenir le service accessible 24h/24, mais nous nous réservons le droit d'interrompre l'accès pour maintenance sans préavis."),
+        cls="modern-card"
+    )
+    return Layout(content, "Conditions")
+
 @rt("/privacy")
-def get(): return Layout(Div(H2("Vie Privée"), P("Aucun stockage."), cls="modern-card"), "Vie Privée")
+def get():
+    content = Div(
+        H2("Politique de Confidentialité"),
+        P("Votre vie privée est au cœur de notre service technique."),
+        
+        H4("1. Traitement des fichiers (RAM-Only)"),
+        P("RetailBox utilise un traitement éphémère en mémoire vive (RAM). Pour les outils comme 'RemBg IA' :"),
+        Ul(
+            Li("Les photos produits sont traitées instantanément."),
+            Li("Aucun fichier n'est écrit sur un disque dur permanent."),
+            Li("Toutes les données sont effacées dès la fin de la génération."),
+        ),
+        
+        H4("2. Publicité et Cookies (Google AdSense)"),
+        P("Ce site utilise Google AdSense. Google utilise des cookies pour diffuser des annonces basées sur vos visites précédentes sur ce site ou d'autres sites. Ces cookies permettent à Google et à ses partenaires de diffuser des annonces basées sur votre navigation. Vous pouvez désactiver la publicité personnalisée dans vos paramètres Google."),
+        
+        H4("3. Collecte de données personnelles"),
+        P("Nous ne collectons aucune donnée nominative (nom, email, adresse IP) à des fins de marketing. Le site est utilisable de manière totalement anonyme."),
+        
+        H4("4. Liens Externes"),
+        P("RetailBox contient des liens vers des services tiers (WhatsApp, Facebook, etc.). Nous ne sommes pas responsables de la gestion des données sur ces plateformes externes."),
+        cls="modern-card"
+    )
+    return Layout(content, "Vie Privée")
+@rt("/ugc")
+def get():
+    content = Div(
+        H2("Droits sur le Contenu Généré (UGC)"),
+        P("UGC signifie 'User Generated Content' (Contenu généré par l'utilisateur)."),
+        
+        H4("1. Propriété exclusive"),
+        P("Vous êtes le propriétaire unique de 100% des fichiers générés sur RetailBox. Cela inclut vos QR codes de menu, vos étiquettes de prix soldés et vos photos détourées."),
+        
+        H4("2. Usage Commercial et Droits"),
+        P("RetailBox vous accorde un droit d'utilisation commerciale illimité et gratuit sur toutes vos créations réalisées via nos outils. Nous ne percevons aucune commission et ne revendiquons aucun droit d'auteur sur votre travail."),
+        
+        H4("3. Responsabilité du contenu"),
+        P("En générant un fichier, vous certifiez posséder les droits sur les logos importés et les liens intégrés. RetailBox n'agit que comme un prestataire technique passif et ne valide pas la légalité du contenu que vous choisissez d'insérer dans vos codes."),
+        cls="modern-card"
+    )
+    return Layout(content, "UGC")
+
 @rt("/contact")
 def get(): return Layout(Div(H2("Contact"), P("utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
 
