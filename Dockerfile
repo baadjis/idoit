@@ -1,7 +1,6 @@
-
 FROM python:3.12-slim
 
-# Dépendances système pour OpenCV et Pillow
+# 1. Dépendances système pour les images et curl pour le téléchargement
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -10,14 +9,14 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copie des fichiers
+# 2. Copie des fichiers
 COPY . .
 
-# Installation des bibliothèques Python
+# 3. Installation des bibliothèques Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- ASTUCE ANTI-LENTEUR : Pré-téléchargement du modèle IA ---
-# On crée le dossier où rembg cherche ses modèles et on le télécharge maintenant
+# 4. PRÉ-TÉLÉCHARGEMENT DU MODÈLE IA (Indispensable pour éviter le "Restarting")
+# On crée le dossier caché et on télécharge le modèle u2net
 RUN mkdir -p /root/.u2net && \
     curl -L https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx -o /root/.u2net/u2net.onnx
 
