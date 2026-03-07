@@ -13,7 +13,6 @@ import os
 # --- CONFIGURATION ---
 CURRENT_YEAR = datetime.now().year
 
-# --- GOOGLE ADSENSE SCRIPT ---
 adsense_script = Script(
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4081303157053373",
     async_=True,
@@ -22,10 +21,12 @@ adsense_script = Script(
 
 # --- SEO & META TAGS ---
 meta_tags = (
-    Meta(name="description", content="RetailBox - Service de génération de QR Code, Code-barres EAN13/Code128 et détourage d'image par IA. Outils gratuits pour le commerce et la logistique."),
-    Meta(name="keywords", content="Générer QR Code, Créer Code-barres, EAN13, Code 128, Enlever fond image, Détourage IA, PNG transparent, Outil Retail"),
+    Meta(name="description", content="Service professionnel pour générer des QR Codes HD, créer des codes-barres EAN-13/Code128 et supprimer l'arrière-plan d'images par IA gratuitement."),
+    Meta(name="keywords", content="Générateur QR Code, Créer Barcode, EAN13 gratuit, Détourage IA, PNG transparent, Étiquettes commerce"),
     Meta(property="og:title", content="RetailBox | Outils de génération QR et Barcode"),
-    Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1")
+    Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
+    # Force le mode clair pour éviter les bugs de couleurs sur mobile
+    Meta(name="color-scheme", content="light")
 )
 
 # --- DESIGN CORRIGÉ (SANS UNDERLINES & DARK MODE FIXED) ---
@@ -35,67 +36,54 @@ custom_style = Style(f"""
     :root {{
         --pico-font-family: 'Plus Jakarta Sans', sans-serif;
         --primary: #4f46e5;
-        --secondary: #9333ea;
-        --glass: rgba(255, 255, 255, 0.9); /* Plus opaque pour la lisibilité mobile */
-        --pico-color: #1e293b;
+        --glass: #ffffff;
+        --pico-color: #0f172a; /* Texte noir profond pour lisibilité max */
         --pico-background-color: #f8fafc;
+        color-scheme: light; /* Force le navigateur en mode clair */
     }}
 
-    /* Désactiver le mode sombre forcé sur mobile */
+    /* Désactiver totalement le mode sombre forcé des systèmes mobiles */
     @media (prefers-color-scheme: dark) {{
         :root {{
-            --pico-color: #1e293b;
-            --pico-background-color: #f8fafc;
-            --glass: rgba(255, 255, 255, 0.95);
+            --pico-color: #0f172a !important;
+            --pico-background-color: #f8fafc !important;
         }}
+        body {{ background-color: #f8fafc !important; color: #0f172a !important; }}
+        .modern-card {{ background: #ffffff !important; color: #0f172a !important; }}
     }}
 
     body {{
         margin: 0; padding: 0;
         background-color: #f8fafc;
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.1) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(147, 51, 234, 0.1) 0px, transparent 50%);
+        background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
+                          radial-gradient(at 100% 0%, rgba(147, 51, 234, 0.08) 0px, transparent 50%);
         background-attachment: fixed;
         min-height: 100vh;
-        color: #1e293b;
+        color: #0f172a;
     }}
 
-    /* Supprimer les traits sous les liens */
-    a {{ text-decoration: none !important; color: inherit; }}
+    /* Suppression des soulignements sur tous les liens */
+    a {{ text-decoration: none !important; color: inherit; border: none; }}
 
     .hero-title {{
-        font-size: clamp(1.6rem, 7vw, 3.2rem);
+        font-size: clamp(1.7rem, 8vw, 3rem);
         font-weight: 800;
-        letter-spacing: -0.03em;
-        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #1e293b;
         line-height: 1.2;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }}
 
-    /* --- NAVIGATION --- */
-    .nav-scroll-container {{
-        width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
-        padding: 10px 0;
-    }}
-    .nav-pills {{
-        display: flex; gap: 0.8rem; justify-content: center;
-        min-width: max-content; padding: 0 1rem;
-    }}
-    @media (max-width: 600px) {{ .nav-pills {{ justify-content: flex-start; }} }}
-
-    .nav-pills a, button:not(.secondary), .btn-download {{
-        padding: 0.6rem 1.2rem !important;
-        border-radius: 14px !important;
+    /* --- BOUTONS --- */
+    .nav-pills a, button, .btn-download {{
+        padding: 0.8rem 1.5rem !important;
+        border-radius: 12px !important;
         background: white !important;
-        color: #475569 !important;
+        color: #1e293b !important;
         font-weight: 700 !important;
-        border: 1px solid #e2e8f0 !important;
+        border: 2px solid #e2e8f0 !important;
         transition: all 0.2s ease !important;
-        display: inline-flex; align-items: center; gap: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        display: inline-flex; align-items: center; justify-content: center;
+        box-shadow: none !important;
         cursor: pointer;
     }}
 
@@ -105,44 +93,44 @@ custom_style = Style(f"""
         border-color: var(--primary) !important;
     }}
 
-    /* --- CARTES & FOOTERS --- */
+    /* --- CARTES & BOUTONS LARGEUR TOTALE --- */
     .modern-card {{
-        background: var(--glass);
-        backdrop-filter: blur(10px);
-        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
         padding: 1.5rem;
-        border-radius: 20px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        border-radius: 16px;
+        color: #0f172a;
     }}
 
     .modern-card footer {{
-        background: transparent !important; /* Enlever le fond noir/gris de Pico */
+        background: transparent !important;
+        padding: 1rem 0 0 0 !important;
+        margin-top: 1rem !important;
         border-top: 1px solid #f1f5f9;
-        margin-top: 1rem;
-        padding: 1rem 0 0 0;
     }}
 
+    .modern-card footer button, .modern-card footer a {{
+        width: 100% !important; /* Bouton occupe toute la largeur */
+        display: flex !important;
+    }}
+
+    /* --- LAYOUT --- */
     .app-grid {{
-        display: grid; grid-template-columns: 1fr 320px; gap: 2rem;
-        max-width: 1200px; margin: auto; padding: 0 1rem;
+        display: grid; grid-template-columns: 1fr 300px; gap: 2rem;
+        max-width: 1100px; margin: auto; padding: 0 1rem;
     }}
     @media (max-width: 1024px) {{ .app-grid {{ grid-template-columns: 1fr; }} }}
 
-    .sidebar-ad {{
-        background: rgba(0,0,0,0.02); border: 2px dashed #cbd5e1;
-        border-radius: 20px; min-height: 250px;
-        display: flex; align-items: center; justify-content: center;
-    }}
+    .nav-scroll-container {{ width: 100%; overflow-x: auto; padding: 10px 0; }}
+    .nav-pills {{ display: flex; gap: 0.5rem; min-width: max-content; }}
 
-    .top-ad-banner {{
-        max-width: 1200px; margin: 0 auto 1.5rem auto;
-        min-height: 90px; background: rgba(0,0,0,0.01);
-        border-radius: 16px; border: 1px dashed #e2e8f0;
+    .sidebar-ad {{
+        background: #f1f5f9; border: 2px dashed #cbd5e1;
+        border-radius: 16px; min-height: 250px;
         display: flex; align-items: center; justify-content: center;
     }}
 """)
 
-# --- INITIALISATION APP ---
 app, rt = fast_app(
     static_path='public',
     hdrs=(
@@ -154,46 +142,45 @@ app, rt = fast_app(
     )
 )
 
-# --- COMPOSANTS INSTRUCTIFS ---
-
-def Logo():
-    return Div(
-        Safe(f"""<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="2.5">
-            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#4f46e5" /><stop offset="100%" style="stop-color:#9333ea" /></linearGradient></defs>
-            <path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"></path>
-        </svg>"""),
-        H1("RetailBox", style="margin:0; font-size: 1.4rem; font-weight: 800;"),
-        style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:1rem;"
-    )
+# --- CONTENU INSTRUCTIF (SEO) ---
 
 def SeoContent():
     return Section(
         Div(
-            H2("Comment utiliser nos services de génération"),
+            H2("Instructions : Comment générer vos fichiers", style="color: #0f172a;"),
             Grid(
                 Div(
-                    H4("Générateur de QR Code"),
-                    P("Saisissez une URL ou des données textuelles. Le moteur génère un code QR haute résolution. Support des logos personnalisés et des formats de couleurs pour l'impression pro.")
+                    H4("Génération de QR Code"),
+                    P("1. Sélectionnez le type 'URL' ou 'Données'. 2. Saisissez vos informations. 3. Personnalisez les couleurs ou ajoutez un logo. 4. Cliquez sur générer pour obtenir un fichier PNG haute définition prêt pour l'impression.")
                 ),
                 Div(
-                    H4("Générateur de Code-barres"),
-                    P("Saisie de codes EAN-13 (12 chiffres) ou Code 128 (texte). Génération instantanée d'étiquettes conformes aux scanners laser pour la logistique et la vente.")
+                    H4("Création de Code-barres"),
+                    P("1. Choisissez le format (EAN-13 pour le commerce, Code 128 pour l'inventaire). 2. Entrez les chiffres ou le texte requis. 3. Le système vérifie automatiquement la conformité du format. 4. Téléchargez l'étiquette conforme aux scanners laser.")
                 ),
                 Div(
-                    H4("Suppression d'arrière-plan"),
-                    P("Traitement d'image par IA pour le détourage automatique. Téléchargement direct au format PNG transparent sans perte de qualité.")
+                    H4("Détourage Image par IA"),
+                    P("1. Téléchargez une photo (JPG, PNG). 2. Notre Intelligence Artificielle identifie le sujet principal. 3. L'arrière-plan est supprimé sans aucune action manuelle. 4. Exportez instantanément au format PNG avec fond transparent.")
                 )
             ),
             cls="modern-card", style="margin-top:2rem;"
         )
     )
 
+# --- COMPOSANTS INTERFACE ---
+
+def Logo():
+    return Div(
+        Safe(f"""<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="3"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"></path></svg>"""),
+        H1("RetailBox", style="margin:0; font-size: 1.3rem; font-weight: 800; color:#0f172a;"),
+        style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:1rem;"
+    )
+
 def FooterSection():
     return Footer(
         Div(
-            Div(H4("📜 Service"), P("Outils de génération gratuits. Traitement éphémère en mémoire vive."), cls="footer-section"),
-            Div(H4("👤 Confidentialité"), P("Aucun stockage d'images ou de données saisies."), cls="footer-section"),
-            Div(H4("🛡️ Légal"), P("Usage sous votre responsabilité. Standard conforme AdSense."), cls="footer-section"),
+            Div(H4("Service"), P("Outils techniques de génération. Traitement éphémère sécurisé."), cls="footer-section"),
+            Div(H4("Confidentialité"), P("Zéro stockage de fichiers ou d'images."), cls="footer-section"),
+            Div(H4("Légal"), P("Usage gratuit conforme aux standards publicitaires."), cls="footer-section"),
             cls="footer-content"
         ),
         Div(
@@ -209,18 +196,14 @@ def Layout(content, active_page, title="RetailBox"):
     return Title(f"{active_page} | {title}"), Main(
         Header(
             Logo(),
-            Div(H1("Générez, Créez et Transformez en un clic", cls="hero-title"), 
-                P("Outils techniques pour le commerce et la logistique.", style="text-align:center;"), 
+            Div(H1("Générez et Transformez vos outils digitaux", cls="hero-title"), 
+                P("Services techniques gratuits pour le commerce et l'industrie.", style="text-align:center; color:#475569;"), 
                 style="text-align:center"),
-            Div(
-                Nav(Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:18px"></i> {name}'), href=url, cls="active" if active_page == name else "") for name, url, icon in nav_items], cls="nav-pills")),
-                cls="nav-scroll-container"
-            )
+            Div(Nav(Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:18px"></i> {name}'), href=url, cls="active" if active_page == name else "") for name, url, icon in nav_items], cls="nav-pills")), cls="nav-scroll-container")
         ),
-        Div(P("Annonce", style="font-size:0.6rem; opacity:0.3; margin:0"), cls="top-ad-banner"),
         Div(
             Section(content),
-            Aside(Div(P("Publicité", style="font-size:0.6rem; opacity:0.3"), cls="sidebar-ad"), cls="sidebar"),
+            Aside(Div(P("Publicité", style="font-size:0.6rem; color:#94a3b8"), cls="sidebar-ad"), cls="sidebar"),
             cls="app-grid"
         ),
         FooterSection(),
@@ -231,28 +214,27 @@ def Layout(content, active_page, title="RetailBox"):
 # --- ROUTES ---
 
 @rt("/ads.txt")
-def get():
-    return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
+def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
 
 @rt("/")
 def get():
     cards = Grid(
-        Card(Div(Safe('<i data-lucide="qr-code" style="width:32px; color:var(--primary);"></i>')), H3("Générer QR Code"), P("Format PNG/SVG haute définition avec logo."), Footer(A(Button("Ouvrir"), href="/qr-tab")), cls="modern-card"),
-        Card(Div(Safe('<i data-lucide="barcode" style="width:32px; color:var(--primary);"></i>')), H3("Générer Barcode"), P("Formats EAN-13, Code 128 et UPC-A."), Footer(A(Button("Ouvrir"), href="/barcode-tab")), cls="modern-card"),
-        Card(Div(Safe('<i data-lucide="image" style="width:32px; color:var(--primary);"></i>')), H3("Détourer Image"), P("Suppression automatique d'arrière-plan par IA."), Footer(A(Button("Ouvrir"), href="/rembg-tab")), cls="modern-card"),
+        Card(Div(Safe('<i data-lucide="qr-code" style="width:32px; color:var(--primary);"></i>')), H3("Générer QR Code"), P("Format HD avec logo pour liens et données."), Footer(A(Button("Ouvrir l'outil"), href="/qr-tab")), cls="modern-card"),
+        Card(Div(Safe('<i data-lucide="barcode" style="width:32px; color:var(--primary);"></i>')), H3("Générer Barcode"), P("Formats EAN-13, Code 128 et UPC-A."), Footer(A(Button("Ouvrir l'outil"), href="/barcode-tab")), cls="modern-card"),
+        Card(Div(Safe('<i data-lucide="image" style="width:32px; color:var(--primary);"></i>')), H3("Détourer Image"), P("Suppression fond automatique par IA."), Footer(A(Button("Ouvrir l'outil"), href="/rembg-tab")), cls="modern-card"),
     )
     return Layout(Div(cards, SeoContent()), "Accueil")
 
 @rt("/qr-tab")
 def get():
     content = Div(
-        H2("Générateur QR Code"),
+        H2("Générateur QR Code HD"),
         Form(
-            Select(Option("URL", value="url"), Option("Fiche Clé:Valeur", value="kv"), name="qr_type", hx_get="/qr-fields", hx_target="#qr-f", hx_trigger="load, change"),
+            Select(Option("Lien URL", value="url"), Option("Fiche Données", value="kv"), name="qr_type", hx_get="/qr-fields", hx_target="#qr-f", hx_trigger="load, change"),
             Div(id="qr-f"),
-            Grid(Label("Code", Input(type="color", name="fill_color", value="#4f46e5")), Label("Fond", Input(type="color", name="back_color", value="#ffffff"))),
-            Label("Logo (Optionnel)", Input(type="file", name="logo", accept="image/*")),
-            Button("🚀 Générer"), hx_post="/generate-qrcode", hx_target="#qr-out", enctype="multipart/form-data"
+            Grid(Label("Couleur Code", Input(type="color", name="fill_color", value="#000000")), Label("Couleur Fond", Input(type="color", name="back_color", value="#ffffff"))),
+            Label("Logo Central (Optionnel)", Input(type="file", name="logo", accept="image/*")),
+            Button("🚀 Générer le QR Code"), hx_post="/generate-qrcode", hx_target="#qr-out", enctype="multipart/form-data"
         ),
         Div(id="qr-out"), cls="modern-card"
     )
@@ -260,9 +242,9 @@ def get():
 
 @rt("/qr-fields")
 def get(qr_type:str):
-    if qr_type == "url": return Input(name="url", placeholder="Lien URL", required=True)
+    if qr_type == "url": return Input(name="url", placeholder="Lien (ex: https://...)", required=True)
     return Div(Div(Input(name="qr_keys", placeholder="Clé"), Input(name="qr_values", placeholder="Valeur"), cls="key-value-row", id="qr-kv-list", style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px;"), 
-               Button("+ Ajouter", type="button", hx_get="/qr-add-row", hx_target="#qr-kv-list", hx_swap="afterend", cls="outline secondary"))
+               Button("+ Ajouter une ligne", type="button", hx_get="/qr-add-row", hx_target="#qr-kv-list", hx_swap="afterend", cls="outline secondary"))
 
 @rt("/qr-add-row")
 def get(): return Div(Input(name="qr_keys", placeholder="Clé"), Input(name="qr_values", placeholder="Valeur"), Button("X", type="button", onclick="this.parentElement.remove()", cls="outline"), cls="key-value-row", style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-top:10px;")
@@ -271,10 +253,10 @@ def get(): return Div(Input(name="qr_keys", placeholder="Clé"), Input(name="qr_
 def get():
     types = [("code128", "Code 128"), ("ean13", "EAN-13"), ("upca", "UPC-A")]
     content = Div(
-        H2("Générateur Barcode"),
+        H2("Générateur de Barcode"),
         Form(
             Select(*[Option(l, value=v) for v, l in types], name="barcode_type", hx_get="/bc-fields", hx_target="#bc-f", hx_trigger="load, change"),
-            Div(id="bc-f"), Button("Générer"), hx_post="/generate-barcode", hx_target="#bc-out"
+            Div(id="bc-f"), Button("Générer le Code-barres"), hx_post="/generate-barcode", hx_target="#bc-out"
         ),
         Div(id="bc-out"), cls="modern-card"
     )
@@ -282,14 +264,14 @@ def get():
 
 @rt("/bc-fields")
 def get(barcode_type:str):
-    placeholder = "12 chiffres" if barcode_type == "ean13" else "Texte ou chiffres"
+    placeholder = "Entrez 12 chiffres" if barcode_type == "ean13" else "Entrez votre texte"
     return Input(name="data", placeholder=placeholder, required=True)
 
 @rt("/rembg-tab")
 def get():
     content = Div(
-        H2("Détourage Image IA"),
-        Form(Input(type="file", name="image", accept="image/*", required=True), Button("Détourer"), hx_post="/remove-background", hx_target="#bg-out", hx_indicator="#load", enctype="multipart/form-data"),
+        H2("Suppression fond par IA"),
+        Form(Input(type="file", name="image", accept="image/*", required=True), Button("Détourer l'image"), hx_post="/remove-background", hx_target="#bg-out", hx_indicator="#load", enctype="multipart/form-data"),
         Div(id="load", cls="htmx-indicator", aria_busy="true"), Div(id="bg-out"), cls="modern-card"
     )
     return Layout(content, "RemBg")
@@ -323,11 +305,11 @@ async def post_bg(image:UploadFile):
 
 # --- PAGES LÉGALES ---
 @rt("/terms")
-def get(): return Layout(Div(H2("Conditions"), P("Service gratuit de génération de codes et détourage."), cls="modern-card"), "Conditions")
+def get(): return Layout(Div(H2("Conditions"), P("Service gratuit de génération technique sans garantie de disponibilité."), cls="modern-card"), "Conditions")
 @rt("/privacy")
-def get(): return Layout(Div(H2("Vie Privée"), P("Aucune donnée n'est stockée."), cls="modern-card"), "Confidentialité")
+def get(): return Layout(Div(H2("Vie Privée"), P("Aucune donnée personnelle ou binaire n'est conservée après traitement."), cls="modern-card"), "Confidentialité")
 @rt("/contact")
-def get(): return Layout(Div(H2("Contact"), P("Email: utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
+def get(): return Layout(Div(H2("Contact"), P("Email Support : utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
 
 if __name__ == "__main__":
     import uvicorn
