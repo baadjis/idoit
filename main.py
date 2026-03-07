@@ -396,12 +396,79 @@ async def post(phone:str, msg:str=""): return generate_qr_response(f"https://wa.
 # --- PAGES LÉGALES ---
 @rt("/ads.txt")
 def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
-@rt("/ugc")
-def get(): return Layout(Div(H2("Droits UGC"), P("Chaque fichier généré appartient à l'utilisateur."), cls="modern-card"), "UGC")
+
 @rt("/terms")
-def get(): return Layout(Div(H2("Conditions"), P("Service gratuit pour commerçants."), cls="modern-card"), "Conditions")
+def get():
+    content = Div(
+        H2("Conditions Générales d'Utilisation"),
+        P("Dernière mise à jour : Mars 2026", style="opacity: 0.6; font-size: 0.8rem;"),
+        
+        H4("1. Acceptation des services"),
+        P("En accédant à RetailBox, vous acceptez d'utiliser nos outils de génération conformément aux présentes conditions. Le service est fourni gratuitement et 'en l'état', sans garantie de disponibilité ininterrompue."),
+        
+        H4("2. Limitations techniques"),
+        P("Bien que nos générateurs respectent les standards (EAN-13, Code 128, QR), RetailBox ne peut être tenu responsable si un scanner tiers ne parvient pas à lire un code généré suite à une mauvaise configuration des couleurs ou une impression de faible qualité."),
+        
+        H4("3. Usages Interdits (Code de conduite)"),
+        P("Il est strictement interdit d'utiliser nos outils pour :"),
+        Ul(
+            Li("Générer des codes-barres frauduleux pour des produits que vous ne possédez pas."),
+            Li("Créer des QR codes redirigeant vers des sites de phishing, de malware ou de contenu illégal."),
+            Li("Utiliser le service WhatsApp pour harceler ou envoyer des messages non sollicités (spam)."),
+            Li("Tenter de saturer nos serveurs par des requêtes automatisées (bots).")
+        ),
+        
+        H4("4. Responsabilité"),
+        P("L'utilisateur est le seul responsable de l'usage commercial des fichiers téléchargés. RetailBox ne pourra être tenu responsable d'un quelconque préjudice lié à l'utilisation de ces outils."),
+        
+        cls="modern-card"
+    )
+    return Layout(content, "Conditions")
+
 @rt("/privacy")
-def get(): return Layout(Div(H2("Vie Privée"), P("Aucun stockage."), cls="modern-card"), "Vie Privée")
+def get():
+    content = Div(
+        H2("Politique de Confidentialité"),
+        P("Nous accordons une importance capitale à la protection de votre vie privée."),
+        
+        H4("1. Traitement des données"),
+        P("RetailBox utilise un traitement éphémère. Lorsqu'un utilisateur importe une photo ou saisit des données :"),
+        Ul(
+            Li("Le traitement est effectué en mémoire vive (RAM)."),
+            Li("Aucune donnée n'est écrite sur un disque dur permanent."),
+            Li("Les fichiers sont supprimés instantanément après le traitement."),
+        ),
+        
+        H4("2. Absence de collecte"),
+        P("Nous ne demandons aucune inscription. Nous ne collectons ni noms, ni adresses e-mail, ni données de localisation."),
+        
+        H4("3. Cookies et Publicité (Google AdSense)"),
+        P("Ce site utilise Google AdSense pour diffuser des annonces. Google peut utiliser des cookies pour diffuser des publicités basées sur vos visites précédentes sur ce site ou d'autres sites. Vous pouvez désactiver la publicité personnalisée dans les paramètres de votre compte Google."),
+        
+        H4("4. Sécurité"),
+        P("Bien qu'aucune donnée ne soit stockée, les échanges entre votre navigateur et nos serveurs sont sécurisés par le protocole HTTPS (SSL)."),
+        
+        cls="modern-card"
+    )
+    return Layout(content, "Vie Privée")
+@rt("/ugc")
+def get():
+    content = Div(
+        H2("Droits sur le Contenu Généré (UGC)"),
+        P("UGC signifie 'User Generated Content' (Contenu généré par l'utilisateur)."),
+        
+        H4("1. Propriété intellectuelle"),
+        P("Vous êtes le propriétaire exclusif de 100% des fichiers générés sur RetailBox. Cela inclut les QR Codes, les étiquettes de soldes, les codes-barres et les images détourées."),
+        
+        H4("2. Usage Commercial"),
+        P("Vous disposez d'un droit d'utilisation illimité, personnel et commercial sur vos créations. RetailBox ne perçoit aucune redevance et ne revendique aucun droit d'auteur sur votre travail."),
+        
+        H4("3. Responsabilité du contenu intégré"),
+        P("En générant un fichier, vous certifiez que les informations intégrées (liens URL, logos, textes) ne violent aucun droit de propriété intellectuelle tiers. RetailBox n'agit que comme un outil technique passif."),
+        
+        cls="modern-card"
+    )
+    return Layout(content, "UGC")
 @rt("/contact")
 def get(): return Layout(Div(H2("Contact"), P("Email: utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
 
