@@ -282,15 +282,41 @@ def get():
 @rt("/gen-soldes", methods=["POST"])
 async def post(item:str, old_p:str, new_p:str, code:str):
     try:
+        # Génération du Barcode
         bc_class = barcode.get_barcode_class('ean13')
-        buf_bc = BytesIO(); bc_class(code, writer=ImageWriter()).write(buf_bc)
-        bc_img = Image.open(buf_bc).resize((300, 150))
-        tag = Image.new('RGB', (400, 500), color='white'); d = ImageDraw.Draw(tag)
-        d.text((20, 20), item[:25], fill="black"); d.text((20, 60), f"{old_p}€", fill="red"); d.line((15, 75, 100, 75), fill="red", width=3); d.text((20, 110), f"{new_p}€", fill="black")
-        tag.paste(bc_img, (50, 300)); buf_final = BytesIO(); tag.save(buf_final, format="PNG"); s = base64.b64encode(buf_final.getvalue()).decode()
-        return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="etiquette.png"), style="text-align:center")
-    except: return P("Erreur : Vérifiez les 12 chiffres.", style="color:red")
+        buf_bc = BytesIO()
+        bc_class(code, writer=ImageWriter()).write(buf_bc)
+        bc_img = Image.open(buf_bc).resize((300, 120))
 
+        # Création de l'étiquette
+        tag = Image.new('RGB', (400, 500), color='white')
+        d = ImageDraw.Draw(tag)
+        
+        # Utilisation de la police par défaut pour éviter les erreurs de fichier .ttf
+        try:
+            # On essaye de charger une police de base si elle existe sur Linux
+            font = ImageFont.load_default()
+        except:
+            font = None
+
+        d.text((20, 20), f"PRODUIT: {item[:20]}", fill="black", font=font)
+        d.text((20, 80), f"AVANT: {old_p}€", fill="red", font=font)
+        d.line((15, 95, 120, 95), fill="red", width=3) # Barrer le prix
+        d.text((20, 140), f"PRIX : {new_p}€", fill="black", font=font)
+        
+        # Coller le code barre en bas
+        tag.paste(bc_img, (50, 300))
+
+        buf_final = BytesIO()
+        tag.save(buf_final, format="PNG")
+        s = base64.b64encode(buf_final.getvalue()).decode()
+        return Div(
+            Img(src=f"data:image/png;base64,{s}", style="border:2px solid #e2e8f0; border-radius:10px;"),
+            A(Button("⬇️ Télécharger l'étiquette", cls="btn-full"), href=f"data:image/png;base64,{s}", download="etiquette-soldes.png"),
+            style="text-align:center; margin-top:1rem;"
+        )
+    except Exception as e:
+        return P(f"Erreur : Vérifiez que le code a 12 chiffres ({e})", style="color:red")
 @rt("/wifi-qr")
 def get():
     content = Div(H2("QR Wi-Fi"), Form(Input(name="s", placeholder="Nom WiFi"), Input(name="p", placeholder="Mot de passe"), Button("Générer"), hx_post="/gen-wifi", hx_target="#o"), Div(id="o"), cls="modern-card")
