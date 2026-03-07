@@ -119,7 +119,7 @@ custom_style = Style(f"""
     summary {{ font-weight: 700; cursor: pointer; }}
 
     /* FOOTER GRADIENT */
-    footer.pro-footer {{ background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important; padding: 4rem 1rem; margin-top: 6rem; color: white !important; }}
+    footer.pro-footer {{ background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important; padding: 4rem 1rem; margin-top: 6rem; color: white !important; border-radius: 16px;}}
     footer.pro-footer h4, footer.pro-footer p, footer.pro-footer a, footer.pro-footer span {{ color: white !important; }}
     .legal-links {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.9rem; }}
 
@@ -188,7 +188,7 @@ def SeoInstructional():
 
 
 def Layout(content, active_page, title="RetailBox"):
-    nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"), ("VCard", "/vcard", "contact"), ("Soldes", "/soldes", "tag"), ("RemBg", "/rembg-tab", "image")]
+    nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"), ("VCard", "/vcard", "contact"), ("Étiquettes Soldes", "/soldes", "tag"), ("RemBg", "/rembg-tab", "image")]
     return Title(f"{active_page} | {title}"), Main(
         Header(
             Logo(),
