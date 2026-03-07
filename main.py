@@ -9,6 +9,7 @@ from barcode.writer import ImageWriter
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import os
+os.environ['U2NET_HOME'] = os.path.join(os.getcwd(), 'data/.u2net')
 
 # --- CONFIGURATION ---
 CURRENT_YEAR = datetime.now().year
@@ -567,5 +568,5 @@ def get(): return Layout(Div(H2("Contact"), P("utilitybox.project@gmail.com"), c
 
 if __name__ == "__main__":
     import uvicorn
-    os.environ.setdefault('U2NET_HOME', os.path.join(os.getcwd(), '.u2net'))
+   
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 7860)))
