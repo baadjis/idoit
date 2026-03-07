@@ -7,7 +7,7 @@ from rembg import remove
 import barcode
 from barcode.writer import ImageWriter
 from datetime import datetime
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import os
 
 # --- CONFIGURATION ---
@@ -21,15 +21,15 @@ adsense_script = Script(
 
 # --- SEO & META TAGS ---
 meta_tags = (
-    Meta(name="description", content="Générateur de QR Code gratuit avec logo, création de codes-barres EAN13 pour produits et détourage image IA sans fond. Outils gratuits et rapides."),
-    Meta(name="keywords", content="Générer QR Code gratuit, créer code barre ean13, enlever fond image gratuit, png transparent, étiquettes produits, barcode generator"),
-    Meta(property="og:title", content="RetailBox | QR, Barcode & IA Background Remover"),
+    Meta(name="description", content="Générez gratuitement vos étiquettes de soldes, cartes de visite QR VCard, identité digitale et codes-barres. Outils pro pour e-commerce."),
+    Meta(name="keywords", content="Identité digitale QR, Étiquettes soldes, QR Code VCard, Barcode EAN13 gratuit, Détourage photo produit, RetailBox"),
+    Meta(property="og:title", content="RetailBox | Étiquettes de Soldes & Identité Digitale"),
     Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
 )
 
-# --- STYLE STABILISÉ ET ADAPTATIF ---
+# --- STYLE STABILISÉ ---
 custom_style = Style(f"""
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
     :root {{
         --pico-font-family: 'Plus Jakarta Sans', sans-serif;
@@ -41,104 +41,157 @@ custom_style = Style(f"""
 
     @media (prefers-color-scheme: dark) {{
         :root {{
-            --pico-color: #f8fafc;
-            --pico-background-color: #0f172a;
+            --pico-color: #f8fafc !important;
+            --pico-background-color: #0f172a !important;
         }}
-        .modern-card {{ background: #1e293b !important; border-color: #334155 !important; }}
-        .nav-pills a, button {{ background: #334155 !important; color: white !important; }}
-        footer {{ background: #1e293b !important; border-top: 1px solid #334155 !important; }}
+        body {{ background-color: #0f172a !important; color: #f8fafc !important; }}
+        .modern-card {{ background: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }}
+        p, h2, h3, h4, li, span, label, summary {{ color: #cbd5e1 !important; }}
+        .nav-pills a {{ background: #1e293b !important; color: white !important; }}
+        footer.pro-footer {{ background: #0f172a !important; border-top: 1px solid #334155 !important; }}
     }}
 
     body {{
-        margin: 0; padding: 0;
+        margin: 0; padding: 0; letter-spacing: -0.015em; line-height: 1.6;
         background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%);
         background-attachment: fixed; min-height: 100vh;
     }}
 
-    /* SUPPRESSION SOULIGNEMENT LIENS */
-    a {{ text-decoration: none !important; border: none !important; }}
+    a {{ text-decoration: none !important; border: none !important; color: inherit; }}
 
-    /* GRADIENT TITRES & BRAND */
     .gradient-text {{
         background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
+        display: inline-block;
     }}
 
-    .hero-title {{ font-size: clamp(1.8rem, 8vw, 3rem); line-height: 1.2; text-align: center; margin: 1rem 0; }}
+    .hero-title {{ font-size: clamp(1.8rem, 8vw, 2.8rem); font-weight: 800; text-align: center; margin: 1.5rem 0; }}
 
-    /* CARTES & BOUTONS FULL WIDTH */
-    .modern-card {{
-        border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 20px;
-        height: 100%; display: flex; flex-direction: column;
-    }}
-    .card-header-flex {{ display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }}
-    
-    .modern-card footer {{
-        background: transparent !important; border-top: 1px solid #e2e8f0;
-        padding: 1rem 0 0 0 !important; margin-top: auto !important;
-    }}
-    .modern-card footer a {{ width: 100%; display: block; }}
-    .modern-card footer button {{ width: 100% !important; margin: 0; }}
-
-    /* NAVIGATION MOBILE */
     .nav-scroll-container {{ width: 100%; overflow-x: auto; padding: 10px 0; }}
-    .nav-pills {{ display: flex; gap: 0.6rem; min-width: max-content; padding: 0 1rem; }}
+    .nav-pills {{ display: flex; gap: 0.6rem; min-width: max-content; padding: 0 1rem; justify-content: center; }}
     .nav-pills a {{
         padding: 0.6rem 1.2rem; border-radius: 12px; background: white; border: 1px solid #e2e8f0;
-        font-weight: 700; color: var(--pico-color);
+        font-weight: 700; color: #1e293b; transition: 0.3s;
     }}
-    .nav-pills a.active {{ background: var(--primary) !important; color: white !important; }}
+    .nav-pills a.active {{ background: var(--primary) !important; color: white !important; border-color: var(--primary); }}
 
-    /* PUB SLOTS */
-    .top-ad-banner {{
-        width: 100%; max-width: 1100px; margin: 1rem auto; min-height: 90px;
-        background: rgba(0,0,0,0.02); border: 1px dashed #cbd5e1; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-    }}
-    .sidebar-ad {{
-        background: rgba(0,0,0,0.02); border: 1px dashed #cbd5e1; border-radius: 20px;
-        min-height: 300px; display: flex; align-items: center; justify-content: center;
+    .services-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+        gap: 2rem; margin-top: 2rem;
     }}
 
-    .app-grid {{ display: grid; grid-template-columns: 1fr 320px; gap: 2rem; max-width: 1200px; margin: auto; padding: 0 1rem; }}
+    .modern-card {{
+        border: 1px solid #e2e8f0; padding: 2rem; border-radius: 24px;
+        height: 100%; display: flex; flex-direction: column; background: #ffffff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }}
+    .modern-card:hover {{ transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }}
+    .card-header-flex {{ display: flex; align-items: center; gap: 15px; margin-bottom: 1.2rem; }}
+    .modern-card footer {{ background: transparent !important; border-top: 1px solid #e2e8f0; padding: 1.2rem 0 0 0 !important; margin-top: auto !important; }}
+
+    button, .btn-full {{
+        width: 100% !important; padding: 0.9rem !important; border-radius: 14px !important;
+        font-weight: 700 !important; border: 1px solid #e2e8f0 !important;
+        background: #f8fafc !important; color: #1e293b !important;
+        cursor: pointer; transition: 0.3s ease !important;
+    }}
+
+    button:hover, .btn-full:hover {{
+        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important;
+        color: white !important; border-color: transparent !important;
+    }}
+
+    /* FAQ */
+    .faq-section {{ margin-top: 5rem; }}
+    details {{ background: rgba(255,255,255,0.5); padding: 1rem; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 1rem; }}
+    summary {{ font-weight: 700; cursor: pointer; color: #1e293b; }}
+
+    footer.pro-footer {{ padding: 4rem 1rem; margin-top: 6rem; border-top: 1px solid #e2e8f0; }}
+    .footer-content {{ display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 1100px; margin: 0 auto; gap: 3rem; }}
+    .footer-section {{ flex: 1; min-width: 280px; }}
+    .legal-links {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e2e8f0; font-size: 0.9rem; opacity: 0.8; }}
+
+    .top-ad-banner {{ width: 100%; max-width: 1100px; margin: 1rem auto; min-height: 90px; background: rgba(0,0,0,0.02); border: 1px dashed #cbd5e1; border-radius: 16px; display: flex; align-items: center; justify-content: center; }}
+    .app-grid {{ display: grid; grid-template-columns: 1fr 320px; gap: 2.5rem; max-width: 1200px; margin: auto; padding: 0 1rem; }}
     @media (max-width: 1024px) {{ .app-grid {{ grid-template-columns: 1fr; }} }}
-
-    footer.pro-footer {{ padding: 3rem 1rem; margin-top: 5rem; border-top: 1px solid #e2e8f0; }}
-    .legal-links {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 2rem; font-size: 0.85rem; }}
 """)
 
 app, rt = fast_app(static_path='public', hdrs=(*meta_tags, Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"), custom_style, adsense_script, Script(src="https://unpkg.com/lucide@latest")))
 
 # --- COMPOSANTS ---
 
-def SeoContent():
-    """Contenu SEO pur pour Google (Instructif et séparé par service)"""
+def Logo():
+    return Div(
+        Safe(f'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="3"><defs><linearGradient id="grad"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#9333ea"/></linearGradient></defs><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"></path></svg>'),
+        H1("RetailBox", cls="gradient-text", style="margin:0; font-size:1.5rem;"),
+        style="display:flex; align-items:center; justify-content:center; gap:10px;"
+    )
+
+def FaqSection():
     return Section(
         Div(
-            H2("Génerer gratuitement vos outils de vente"),
-            
-            H3("Générez des QR Codes gratuits avec le logo de votre marque"),
-            P("Téléchargez facilement des QR codes haute définition. Notre outil permet d'intégrer le logo de votre marque directement au centre du code. C'est idéal pour vos menus de restaurant, vos cartes de visite ou vos liens de paiement. Entrez votre URL, choisissez vos couleurs et téléchargez votre fichier PNG prêt pour l'impression."),
-            
-            H3("Créer des codes-barres  pour vos produits"),
-            P("Besoin d'un barcode pour votre inventaire ? Saisissez vos 12 chiffres et notre générateur crée instantanément un code-barres EAN-13 ou Code 128 conforme aux standards du commerce. Ces étiquettes sont lisibles par tous les scanners laser et facilitent la gestion de vos stocks."),
-            
-            H3("Enlever le fond d'une image gratuitement"),
-            P("Optimisez vos photos produits pour les mettre en ligne. Notre intelligence artificielle détecte automatiquement le sujet et supprime l'arrière-plan en 5 secondes. Téléchargez votre image en PNG transparent avec une qualité studio, sans avoir besoin de logiciel de montage complexe."),
-            
-            cls="modern-card", style="margin-top:3rem; border-style: solid;"
+            H2("Questions fréquentes sur nos outils digitaux"),
+            Details(Summary("Comment générer un QR code gratuit pour mon commerce ?"), 
+                    P("Il vous suffit d'utiliser notre outil 'QR Pro', d'entrer l'URL de votre boutique et de personnaliser les couleurs. Le téléchargement est immédiat et sans frais.")),
+            Details(Summary("Comment créer une étiquette de soldes professionnelle ?"), 
+                    P("Notre générateur d'étiquettes de soldes permet de saisir l'ancien prix, le nouveau prix et le code-barres. Il génère une image prête à imprimer avec le prix barré.")),
+            Details(Summary("Regrouper ses réseaux sociaux dans un seul QR code ?"), 
+                    P("Oui, utilisez notre service d'Identité Digitale. Entrez vos liens Instagram, TikTok et WhatsApp pour créer une Social Card unique pour vos clients.")),
+            Details(Summary("Le détourage d'image par IA est-il illimité ?"), 
+                    P("Absolument. Vous pouvez supprimer le fond de vos photos produits autant de fois que nécessaire pour vos fiches Shopify ou Vinted.")),
+            cls="faq-section"
+        )
+    )
+
+def SeoInstructional():
+    return Section(
+        Div(
+            H2("Guide complet : Comment utiliser nos services gratuits"),
+            # Première ligne d'instructions
+            Grid(
+                Div(
+                    H4("🚀 QR Codes avec Logo"), 
+                    P("Entrez votre URL ou texte, personnalisez les couleurs et ajoutez le logo de votre marque. Téléchargez un QR code haute résolution prêt pour l'impression.")
+                ),
+                Div(
+                    H4("👤 VCard : Carte de Visite"), 
+                    P("Saisissez vos coordonnées pro (nom, tel, email). Le QR généré permet à vos clients d'enregistrer votre contact instantanément sur leur smartphone.")
+                ),
+                Div(
+                    H4("🏷️ Étiquettes de Soldes"), 
+                    P("Indiquez le prix d'origine et le prix remisé. Notre outil génère une étiquette visuelle avec prix barré et code-barres pour vos rayons.")
+                ),
+            ),
+            # Deuxième ligne d'instructions
+            Grid(
+                Div(
+                    H4("🔢 Barcode EAN-13 & 128"), 
+                    P("Entrez vos chiffres pour générer des codes-barres conformes aux standards du commerce et de la logistique, lisibles par tous les scanners.")
+                ),
+                Div(
+                    H4("🖼️ Détourage IA de Produit"), 
+                    P("Importez vos photos. Notre Intelligence Artificielle supprime l'arrière-plan automatiquement pour créer des fichiers PNG transparents de qualité studio.")
+                ),
+                Div(
+                    H4("📶 QR Code Accès Wi-Fi"), 
+                    P("Simplifiez la vie de vos clients : entrez le nom de votre réseau et le mot de passe pour générer un code de connexion automatique sans saisie manuelle.")
+                ),
+            ),
+            cls="modern-card", 
+            style="margin-top:4rem; border-style: solid; border-width: 2px; border-color: var(--primary);"
         )
     )
 
 def FooterSection():
     return Footer(
         Div(
-            Div(H4("Usage"), P("Génération gratuite en mémoire vive (RAM)."), cls="footer-section"),
-            Div(H4("Vie Privée"), P("Zéro stockage de vos photos et données."), cls="footer-section"),
-            Div(H4("Propriété"), P("Vous détenez 100% des droits (UGC)."), cls="footer-section"),
-            cls="footer-content", style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:2rem; max-width:1200px; margin:auto;"
+            Div(H4("🚀 Usage"), P("Génération gratuite pour retailers. Traitement haute performance en mémoire vive."), cls="footer-section"),
+            Div(H4("🛡️ Vie Privée"), P("Zéro stockage sur nos serveurs. Vos fichiers sont supprimés instantanément."), cls="footer-section"),
+            Div(H4("👤 Propriété UGC"), P("Vous détenez 100% des droits sur tous les fichiers générés sur ce site."), cls="footer-section"),
+            cls="footer-content"
         ),
         Div(
             A("Conditions", href="/terms"), A("Vie Privée", href="/privacy"), A("UGC", href="/ugc"), A("Contact", href="/contact"),
@@ -149,102 +202,134 @@ def FooterSection():
     )
 
 def Layout(content, active_page, title="RetailBox"):
-    nav_items = [("Accueil", "/", "home"), ("QR Code", "/qr-tab", "qr-code"), ("Barcode", "/barcode-tab", "barcode"), ("RemBg", "/rembg-tab", "image")]
+    nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"), ("Étiquettes Soldes", "/soldes", "tag"), ("Barcode", "/barcode-tab", "barcode"), ("RemBg", "/rembg-tab", "image")]
     return Title(f"{active_page} | {title}"), Main(
         Header(
-            Div(Safe(f'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="3"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"></path></svg>'), H1("RetailBox", cls="gradient-text", style="margin:0; font-size:1.4rem;"), style="display:flex; align-items:center; justify-content:center; gap:8px;"),
+            Logo(),
             Div(H1("Générez et Transformez en un clic", cls="hero-title gradient-text"), style="text-align:center;"),
             Div(Nav(Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:18px"></i> {name}'), href=url, cls="active" if active_page == name else "") for name, url, icon in nav_items], cls="nav-pills")), cls="nav-scroll-container")
         ),
-        Div(P("Espace Publicitaire Premium", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
-        Div(Section(content), Aside(Div(P("Publicité", style="font-size:0.6rem; opacity:0.5"), cls="sidebar-ad"), cls="sidebar"), cls="app-grid"),
-        SeoContent(),
+        Div(P("Espace Publicitaire", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
+        Div(Section(content), Aside(Div(P("Publicité"), style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; height:600px; display:flex; align-items:center; justify-content:center; position:sticky; top:20px;"), cls="sidebar"), cls="app-grid"),
+        SeoInstructional(), FaqSection(),
         FooterSection(),
-        Script("lucide.createIcons();"),
-        cls="container"
+        Script("lucide.createIcons();"), cls="container"
     )
 
-# --- ROUTES ---
-
-@rt("/ads.txt")
-def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
+# --- ROUTES ACCUEIL ---
 
 @rt("/")
 def get():
-    cards = Grid(
-        Card(
-            Div(Safe('<i data-lucide="qr-code" style="width:28px; color:var(--primary);"></i>'), H3("QR Code Pro", style="margin:0;"), cls="card-header-flex"),
-            P("Instructions : Entrez votre lien URL, choisissez vos couleurs de marque et téléchargez votre QR code haute définition gratuitement."),
-            Footer(A(Button("Ouvrir l'outil"), href="/qr-tab")), cls="modern-card"
-        ),
-        Card(
-            Div(Safe('<i data-lucide="barcode" style="width:28px; color:var(--primary);"></i>'), H3("Barcode Expert", style="margin:0;"), cls="card-header-flex"),
-            P("Instructions : Saisissez vos 12 chiffres EAN-13 pour créer vos étiquettes de produits et gérer votre inventaire commerce."),
-            Footer(A(Button("Ouvrir l'outil"), href="/barcode-tab")), cls="modern-card"
-        ),
-        Card(
-            Div(Safe('<i data-lucide="image" style="width:28px; color:var(--primary);"></i>'), H3("Détourage IA", style="margin:0;"), cls="card-header-flex"),
-            P("Instructions : Importez une photo de produit. Notre IA supprime automatiquement l'arrière-plan pour un PNG transparent."),
-            Footer(A(Button("Ouvrir l'outil"), href="/rembg-tab")), cls="modern-card"
-        ),
-    )
+    services = [
+        ("tag", "Étiquettes Soldes", "Prix barré + Barcode pour vos promos.", "/soldes"),
+        ("users", "Identité Digitale", "Un seul QR pour tous vos réseaux.", "/digital-id"),
+        ("qr-code", "QR Code Pro", "Lien personnalisé avec votre logo.", "/qr-tab"),
+        ("barcode", "Barcode Expert", "Codes EAN-13 et Code 128 pro.", "/barcode-tab"),
+        ("image", "Détourage IA", "Enlever le fond des photos produits.", "/rembg-tab"),
+        ("wifi", "Accès Wi-Fi", "Connexion automatique sans mot de passe.", "/wifi-qr"),
+    ]
+    cards = Div(*[Card(
+        Div(Safe(f'<i data-lucide="{s[0]}" style="width:32px; color:var(--primary);"></i>'), H3(s[1], style="margin:0;"), cls="card-header-flex"),
+        P(s[2]),
+        Footer(A(Button("Ouvrir l'outil", cls="btn-full"), href=s[3])), cls="modern-card"
+    ) for s in services], cls="services-grid")
     return Layout(cards, "Accueil")
 
-# PAGES LÉGALES
-@rt("/ugc")
-def get(): return Layout(Div(H2("Propriété UGC"), P("Chaque fichier généré sur RetailBox appartient à l'utilisateur."), cls="modern-card"), "UGC")
-@rt("/terms")
-def get(): return Layout(Div(H2("Conditions"), P("Service gratuit pour usage personnel et pro."), cls="modern-card"), "Conditions")
-@rt("/privacy")
-def get(): return Layout(Div(H2("Vie Privée"), P("Aucun stockage d'images sur nos serveurs."), cls="modern-card"), "Confidentialité")
-@rt("/contact")
-def get(): return Layout(Div(H2("Contact"), P("Email: utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
+# --- SERVICES ---
 
-# OUTILS
+@rt("/digital-id")
+def get():
+    content = Div(
+        H2("Votre Identité Digitale"),
+        P("Rassemblez vos réseaux sociaux dans un seul QR Code."),
+        Form(
+            Grid(Input(name="fb", placeholder="Lien Facebook"), Input(name="ig", placeholder="Lien Instagram")),
+            Grid(Input(name="tk", placeholder="Lien TikTok"), Input(name="sh", placeholder="Lien Boutique / Shopify")),
+            Button("🚀 Générer ma Social Card"), hx_post="/gen-id", hx_target="#o"
+        ), Div(id="o"), cls="modern-card"
+    )
+    return Layout(content, "Identité Digitale")
+
+@rt("/gen-id", methods=["POST"])
+async def post(fb:str="", ig:str="", tk:str="", sh:str=""):
+    data = f"Mes Réseaux :\nFB: {fb}\nIG: {ig}\nTK: {tk}\nBoutique: {sh}"
+    return generate_qr_response(data, "social-id.png")
+
+@rt("/soldes")
+def get():
+    content = Div(H2("Étiquettes de Soldes"), P("Créez une étiquette pro avec prix barré."), Form(Input(name="item", placeholder="Nom du produit"), Grid(Input(name="old_p", placeholder="Ancien Prix"), Input(name="new_p", placeholder="Prix Soldé")), Input(name="code", placeholder="Barcode (12 chiffres)"), Button("🚀 Créer"), hx_post="/gen-soldes", hx_target="#o"), Div(id="o"), cls="modern-card")
+    return Layout(content, "Étiquettes Soldes")
+
+@rt("/gen-soldes", methods=["POST"])
+async def post(item:str, old_p:str, new_p:str, code:str):
+    try:
+        bc_class = barcode.get_barcode_class('ean13')
+        buf_bc = BytesIO(); bc_class(code, writer=ImageWriter()).write(buf_bc)
+        bc_img = Image.open(buf_bc).resize((300, 150))
+        tag = Image.new('RGB', (400, 500), color='white'); d = ImageDraw.Draw(tag)
+        d.text((20, 20), item[:25], fill="black"); d.text((20, 60), f"{old_p}€", fill="red"); d.line((15, 75, 100, 75), fill="red", width=3); d.text((20, 110), f"{new_p}€", fill="black")
+        tag.paste(bc_img, (50, 300)); buf_final = BytesIO(); tag.save(buf_final, format="PNG"); s = base64.b64encode(buf_final.getvalue()).decode()
+        return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="etiquette.png"), style="text-align:center")
+    except: return P("Erreur : Vérifiez les 12 chiffres.", style="color:red")
+
+@rt("/wifi-qr")
+def get():
+    content = Div(H2("QR Wi-Fi"), Form(Input(name="s", placeholder="Nom WiFi"), Input(name="p", placeholder="Mot de passe"), Button("Générer"), hx_post="/gen-wifi", hx_target="#o"), Div(id="o"), cls="modern-card")
+    return Layout(content, "Wi-Fi")
+
+@rt("/gen-wifi", methods=["POST"])
+async def post(s:str, p:str): return generate_qr_response(f"WIFI:S:{s};T:WPA;P:{p};;", "wifi.png")
+
+def generate_qr_response(data, name):
+    qr = qrcode.make(data); buf = BytesIO(); qr.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
+    return Div(Img(src=f"data:image/png;base64,{s}", style="max-width:240px; margin:auto;"), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download=name), style="text-align:center; padding:1rem;")
+
 @rt("/qr-tab")
 def get():
-    content = Div(H2("Générateur QR Code"), Form(Select(Option("URL", value="url"), Option("Fiche Clé:Valeur", value="kv"), name="qr_type", hx_get="/qr-fields", hx_target="#qr-f", hx_trigger="load, change"), Div(id="qr-f"), Grid(Label("Code", Input(type="color", name="fill_color", value="#000000")), Label("Fond", Input(type="color", name="back_color", value="#ffffff"))), Label("Logo", Input(type="file", name="logo", accept="image/*")), Button("🚀 Générer"), hx_post="/generate-qrcode", hx_target="#qr-out", enctype="multipart/form-data"), Div(id="qr-out"), cls="modern-card")
-    return Layout(content, "QR Code")
+    content = Div(H2("QR Code Pro"), Form(Input(name="u", placeholder="URL"), Grid(Input(type="color", name="fc", value="#000000"), Input(type="color", name="bc", value="#ffffff")), Label("Logo", Input(type="file", name="l")), Button("Générer"), hx_post="/gen-qr", hx_target="#o", enctype="multipart/form-data"), Div(id="o"), cls="modern-card")
+    return Layout(content, "QR Pro")
+
+@rt("/gen-qr", methods=["POST"])
+async def post(u:str, fc:str, bc:str, l:UploadFile=None):
+    qr = qrcode.QRCode(border=4); qr.add_data(u); qr.make(fit=True); img = qr.make_image(fill_color=fc, back_color=bc).convert('RGB')
+    if l and l.size > 0:
+        log = Image.open(BytesIO(await l.read())); log.thumbnail((img.size[0]//4, img.size[1]//4)); img.paste(log, ((img.size[0]-log.size[0])//2, (img.size[1]-log.size[1])//2))
+    buf = BytesIO(); img.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
+    return Div(Img(src=f"data:image/png;base64,{s}", style="max-width:240px;"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="qr.png"), style="text-align:center")
 
 @rt("/barcode-tab")
 def get():
-    types = [("ean13", "EAN-13 (Standard)"), ("code128", "Code 128 (Texte)")]
-    content = Div(H2("Générateur de Barcode"), Form(Select(*[Option(l, value=v) for v, l in types], name="barcode_type", hx_get="/bc-fields", hx_target="#bc-f", hx_trigger="load, change"), Div(id="bc-f"), Button("Générer le Code"), hx_post="/generate-barcode", hx_target="#bc-out"), Div(id="bc-out"), cls="modern-card")
+    content = Div(H2("Barcode Pro"), Form(Select(Option("EAN-13", value="ean13"), Option("Code 128", value="code128"), name="t"), Input(name="d", placeholder="Données"), Button("Générer"), hx_post="/gen-bc", hx_target="#o"), Div(id="o"), cls="modern-card")
     return Layout(content, "Barcode")
 
-@rt("/bc-fields")
-def get(barcode_type:str): return Input(name="data", placeholder="Numéros ou texte", required=True)
+@rt("/gen-bc", methods=["POST"])
+async def post(t:str, d:str):
+    try:
+        bc = barcode.get_barcode_class(t)(d, writer=ImageWriter()); buf = BytesIO(); bc.write(buf); s = base64.b64encode(buf.getvalue()).decode()
+        return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="bc.png"), style="text-align:center")
+    except: return P("Erreur format", style="color:red")
 
 @rt("/rembg-tab")
 def get():
-    content = Div(H2("IA Suppression fond"), Form(Input(type="file", name="image", accept="image/*", required=True), Button("Détourer l'image"), hx_post="/remove-background", hx_target="#bg-out", hx_indicator="#load", enctype="multipart/form-data"), Div(id="load", cls="htmx-indicator", aria_busy="true"), Div(id="bg-out"), cls="modern-card")
+    content = Div(H2("Détourage IA"), Form(Input(type="file", name="i", accept="image/*"), Button("Supprimer le fond"), hx_post="/gen-bg", hx_target="#o", hx_indicator="#l", enctype="multipart/form-data"), Div(id="l", cls="htmx-indicator", aria_busy="true"), Div(id="o"), cls="modern-card")
     return Layout(content, "RemBg")
 
-# LOGIQUE POST
-@rt("/generate-qrcode", methods=["POST"])
-async def post_qr(qr_type:str, url:str=None, qr_keys:list=None, qr_values:list=None, fill_color:str="#000000", back_color:str="#ffffff", logo:UploadFile=None):
-    c = url if qr_type == "url" else "\n".join([f"{k}:{v}" for k,v in zip(qr_keys, qr_values) if k])
-    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
-    qr.add_data(c); qr.make(fit=True)
-    img = qr.make_image(fill_color=fill_color, back_color=back_color).convert('RGB')
-    if logo and logo.size > 0:
-        log = Image.open(BytesIO(await logo.read())); log.thumbnail((img.size[0]//4, img.size[1]//4))
-        img.paste(log, ((img.size[0]-log.size[0])//2, (img.size[1]-log.size[1])//2))
-    buf = BytesIO(); img.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
-    return Div(Img(src=f"data:image/png;base64,{s}", style="max-width:250px; margin:auto;"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="qrcode.png"), style="text-align:center;")
+@rt("/gen-bg", methods=["POST"])
+async def post(i:UploadFile):
+    res = remove(await i.read()); s = base64.b64encode(res).decode()
+    return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="nobg.png"), style="text-align:center")
 
-@rt("/generate-barcode", methods=["POST"])
-async def post_bc(barcode_type:str, data:str):
-    try:
-        bc = barcode.get_barcode_class(barcode_type)(data, writer=ImageWriter())
-        buf = BytesIO(); bc.write(buf); s = base64.b64encode(buf.getvalue()).decode()
-        return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="barcode.png"), style="text-align:center;")
-    except Exception as e: return Div(f"Erreur format: {e}", style="color:red;")
-
-@rt("/remove-background", methods=["POST"])
-async def post_bg(image:UploadFile):
-    res = remove(await image.read()); s = base64.b64encode(res).decode()
-    return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="nobg.png"), style="text-align:center;")
+# --- PAGES LÉGALES ---
+@rt("/ads.txt")
+def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
+@rt("/ugc")
+def get(): return Layout(Div(H2("Droits UGC"), P("Chaque fichier généré appartient à l'utilisateur."), cls="modern-card"), "UGC")
+@rt("/terms")
+def get(): return Layout(Div(H2("Conditions"), P("Service gratuit pour commerçants."), cls="modern-card"), "Conditions")
+@rt("/privacy")
+def get(): return Layout(Div(H2("Vie Privée"), P("Aucun stockage."), cls="modern-card"), "Vie Privée")
+@rt("/contact")
+def get(): return Layout(Div(H2("Contact"), P("Email: utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
 
 if __name__ == "__main__":
     import uvicorn
