@@ -33,7 +33,7 @@ services = [
 
 faq_data = [
     {
-        "q": "Comment générer un QR code pour mon menu restaurant PDF ?",
+        "q": "Comment générer un QR code pour mon menu restaurant en PDF ?",
         "a": "Hébergez votre menu sur Google Drive ou Dropbox, copiez le lien de partage public et utilisez notre outil 'QR Pro'. Vous pouvez même ajouter le logo de votre établissement pour un rendu professionnel."
     },
     {
@@ -145,7 +145,7 @@ def SeoInstructional():
             # Première ligne : Identité et Contacts
             Grid(
                 Div(
-                    H4("🚀 QR Codes avec Logo"), 
+                    H4("🚀 QR Codes avec ou sans Logo"), 
                     P("Entrez votre URL ou le lien de votre menu restaurant PDF. Personnalisez les couleurs et ajoutez le logo de votre marque. Téléchargez un QR code haute résolution prêt pour l'impression.")
                 ),
                 Div(
@@ -168,7 +168,7 @@ def SeoInstructional():
                     P("Générez vos étiquettes de prix : indiquez le prix d'origine et le prix remisé. L'outil crée un visuel pro avec prix barré et code-barres conforme pour vos rayons.")
                 ),
                 Div(
-                    H4("🔢 Barcode EAN-13 & 128"), 
+                    H4("🔢 Barcode EAN-13 & 128 "), 
                     P("Gérez vos stocks facilement. Saisissez vos chiffres pour générer des codes-barres standards (EAN-13 commerce ou Code 128 logistique) lisibles par tous les scanners laser.")
                 ),
                 Div(
