@@ -325,34 +325,155 @@ def get():
 @rt("/gen-wifi", methods=["POST"])
 async def post(s:str, p:str): return generate_qr_response(f"WIFI:S:{s};T:WPA;P:{p};;", "wifi.png")
 
-def generate_qr_response(data, name):
-    qr = qrcode.make(data); buf = BytesIO(); qr.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
-    return Div(Img(src=f"data:image/png;base64,{s}", style="max-width:240px; margin:auto;"), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download=name), style="text-align:center; padding:1rem;")
-
+def DataRow(prefix):
+    return Div(
+        Input(name=f"{prefix}_keys", placeholder="Clé (ex: Prix)"),
+        Input(name=f"{prefix}_vals", placeholder="Valeur"),
+        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", 
+               cls="outline secondary", onclick="this.parentElement.remove()",
+               style="border:none; padding:0; width:40px; background:transparent !important;"),
+        cls="key-value-row", 
+        style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-bottom:12px;"
+    )
 @rt("/qr-tab")
 def get():
-    content = Div(H2("QR Code Pro"), Form(Input(name="u", placeholder="URL"), Grid(Input(type="color", name="fc", value="#000000"), Input(type="color", name="bc", value="#ffffff")), Label("Logo", Input(type="file", name="l")), Button("Générer"), hx_post="/gen-qr", hx_target="#o", enctype="multipart/form-data"), Div(id="o"), cls="modern-card")
+    content = Div(
+        H2("Générateur QR Code Pro"),
+        Form(
+            Label("Contenu du QR Code", 
+                Select(
+                    Option("Lien URL Simple", value="url", selected=True), 
+                    Option("Données Key-Value (Fiche)", value="kv"), 
+                    name="qr_mode", 
+                    hx_get="/qr-fields", 
+                    hx_target="#qr-inputs",
+                    hx_trigger="load, change" # Déclenchement automatique
+                )
+            ),
+            Div(id="qr-inputs", style="margin-bottom:20px;"),
+            
+            # Grille de couleurs avec labels explicites
+            Grid(
+                Div(Label("Couleur du QR", Input(type="color", name="fc", value="#000000"))),
+                Div(Label("Couleur du Fond", Input(type="color", name="bc", value="#ffffff")))
+            ),
+            
+            Label("Logo de marque (Optionnel)", Input(type="file", name="logo", accept="image/*")),
+            
+            Button("🚀 Générer le QR Code"),
+            hx_post="/gen-qr", hx_target="#qr-result", enctype="multipart/form-data"
+        ),
+        Div(id="qr-result"),
+        cls="modern-card"
+    )
     return Layout(content, "QR Pro")
 
-@rt("/gen-qr", methods=["POST"])
-async def post(u:str, fc:str, bc:str, l:UploadFile=None):
-    qr = qrcode.QRCode(border=4); qr.add_data(u); qr.make(fit=True); img = qr.make_image(fill_color=fc, back_color=bc).convert('RGB')
-    if l and l.size > 0:
-        log = Image.open(BytesIO(await l.read())); log.thumbnail((img.size[0]//4, img.size[1]//4)); img.paste(log, ((img.size[0]-log.size[0])//2, (img.size[1]-log.size[1])//2))
-    buf = BytesIO(); img.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
-    return Div(Img(src=f"data:image/png;base64,{s}", style="max-width:240px;"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="qr.png"), style="text-align:center")
+@rt("/qr-fields")
+def get(qr_mode:str):
+    if qr_mode == "url":
+        return Input(name="url", placeholder="Lien https://...", required=True)
+    return Div(
+        Div(DataRow("qr"), id="qr-kv-container"),
+        Button("+ Ajouter une donnée", type="button", cls="outline secondary",
+               hx_get="/add-qr-row", hx_target="#qr-kv-container", hx_swap="beforeend")
+    )
 
+@rt("/add-qr-row")
+def get(): return DataRow("qr")
+
+@rt("/gen-qr", methods=["POST"])
+async def post(qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=None, qr_vals:list=None, logo:UploadFile=None):
+    # Logique de construction du contenu
+    if qr_mode == "url":
+        data = url
+    else:
+        # Gestion FastHTML (si 1 seul champ = str, si plusieurs = list)
+        keys = [qr_keys] if isinstance(qr_keys, str) else qr_keys
+        vals = [qr_vals] if isinstance(qr_vals, str) else qr_vals
+        data = "\n".join([f"{k}: {v}" for k, v in zip(keys, vals) if k.strip()])
+
+    if not data: return P("Erreur : données vides", style="color:red")
+
+    qr = qrcode.QRCode(border=4)
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color=fc, back_color=bc).convert('RGB')
+    
+    if logo and logo.size > 0:
+        log_img = Image.open(BytesIO(await logo.read()))
+        log_img.thumbnail((img.size[0]//4, img.size[1]//4))
+        img.paste(log_img, ((img.size[0]-log_img.size[0])//2, (img.size[1]-log_img.size[1])//2))
+        
+    buf = BytesIO(); img.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
+    return Div(
+        Img(src=f"data:image/png;base64,{s}", style="max-width:250px; margin:auto;"),
+        A(Button("⬇️ Télécharger PNG"), href=f"data:image/png;base64,{s}", download="qrcode.png"),
+        style="text-align:center; padding-top:1rem;"
+    )
 @rt("/barcode-tab")
 def get():
-    content = Div(H2("Barcode Pro"), Form(Select(Option("EAN-13", value="ean13"), Option("Code 128", value="code128"), name="t"), Input(name="d", placeholder="Données"), Button("Générer"), hx_post="/gen-bc", hx_target="#o"), Div(id="o"), cls="modern-card")
+    content = Div(
+        H2("Générateur de Barcode Expert"),
+        Form(
+            Label("Format du code-barres",
+                Select(
+                    Option("EAN-13 (Standard Commerce)", value="ean13", selected=True),
+                    Option("Code 128 (Logistique / Données)", value="code128"),
+                    name="bc_mode", 
+                    hx_get="/bc-fields", 
+                    hx_target="#bc-inputs",
+                    # L'astuce est ici : load (au chargement) et change (quand on clique)
+                    hx_trigger="load, change" 
+                )
+            ),
+            # Ce conteneur sera rempli automatiquement au chargement grâce au trigger "load"
+            Div(id="bc-inputs", style="margin-bottom:20px;"),
+            
+            Button("🚀 Générer le Code-barres"),
+            hx_post="/gen-bc", hx_target="#bc-result"
+        ),
+        Div(id="bc-result"),
+        cls="modern-card"
+    )
     return Layout(content, "Barcode")
 
+@rt("/bc-fields")
+def get(bc_mode:str):
+    if bc_mode == "ean13":
+        return Div(
+            Input(name="bc_data", placeholder="Entrez 12 chiffres", required=True),
+            P("Le 13ème chiffre de contrôle sera calculé automatiquement.", style="font-size:0.8rem; opacity:0.7;")
+        )
+    return Div(
+        Div(DataRow("bc"), id="bc-kv-container"),
+        Button("+ Ajouter une donnée", type="button", cls="outline secondary",
+               hx_get="/add-bc-row", hx_target="#bc-kv-container", hx_swap="beforeend")
+    )
+
+@rt("/add-bc-row")
+def get(): return DataRow("bc")
+
 @rt("/gen-bc", methods=["POST"])
-async def post(t:str, d:str):
+async def post(bc_mode:str, bc_data:str=None, bc_keys:list=None, bc_vals:list=None):
     try:
-        bc = barcode.get_barcode_class(t)(d, writer=ImageWriter()); buf = BytesIO(); bc.write(buf); s = base64.b64encode(buf.getvalue()).decode()
-        return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="bc.png"), style="text-align:center")
-    except: return P("Erreur format", style="color:red")
+        if bc_mode == "ean13":
+            final_data = bc_data
+        else:
+            keys = [bc_keys] if isinstance(bc_keys, str) else bc_keys
+            vals = [bc_vals] if isinstance(bc_vals, str) else bc_vals
+            final_data = " ".join([f"{k}:{v}" for k, v in zip(keys, vals) if k.strip()])
+
+        bc_class = barcode.get_barcode_class(bc_mode)
+        buf = BytesIO()
+        bc_class(final_data, writer=ImageWriter()).write(buf)
+        s = base64.b64encode(buf.getvalue()).decode()
+        return Div(
+            Img(src=f"data:image/png;base64,{s}"),
+            A(Button("⬇️ Télécharger Barcode"), href=f"data:image/png;base64,{s}", download="barcode.png"),
+            style="text-align:center; padding-top:1rem;"
+        )
+    except Exception as e:
+        return P(f"Erreur de format : {str(e)}", style="color:red; font-weight:bold;")
 
 @rt("/rembg-tab")
 def get():
