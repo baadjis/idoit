@@ -134,6 +134,8 @@ services = [
     ]
 # --- COMPOSANTS ---
 
+
+
 def Logo():
     return Div(
         Safe(f'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="3"><defs><linearGradient id="grad"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#9333ea"/></linearGradient></defs><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"></path></svg>'),
@@ -240,6 +242,49 @@ def Layout(content, active_page, title="RetailBox"):
         SeoInstructional(), FaqSection(),
         FooterSection(),
         Script("lucide.createIcons();"), cls="container"
+    )
+
+# function utils 
+
+def generate_qr_response(data, filename):
+    """
+    Fonction universelle pour générer un QR Code et renvoyer le rendu HTML.
+    data : le texte ou lien à encoder.
+    filename : le nom du fichier pour le téléchargement (ex: 'wifi.png').
+    """
+    # 1. Création du QR Code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # 2. Conversion en Base64 pour l'affichage web
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    img_str = base64.b64encode(buf.getvalue()).decode()
+    
+    # 3. Rendu HTML cohérent avec ton thème Splendide
+    return Div(
+        # L'image du QR Code généré
+        Img(src=f"data:image/png;base64,{img_str}", 
+            style="max-width:250px; margin: 1.5rem auto; border: 2px solid #f1f5f9; border-radius: 16px; display: block;"),
+        
+        # Le bouton de téléchargement (Pleine largeur, style cohérent)
+        A(
+            Button("⬇️ Télécharger l'image PNG", cls="btn-full"), 
+            href=f"data:image/png;base64,{img_str}", 
+            download=filename,
+            style="width: 100%; display: block; text-decoration: none !important;"
+        ),
+        
+        # Petit conteneur pour isoler le résultat
+        style="text-align:center; padding: 1.5rem; background: rgba(0,0,0,0.02); border-radius: 24px; margin-top: 2rem; border: 1px solid #e2e8f0;"
     )
 
 # --- ROUTES ACCUEIL ---
