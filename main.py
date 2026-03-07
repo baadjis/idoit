@@ -120,7 +120,18 @@ custom_style = Style(f"""
 """)
 
 app, rt = fast_app(static_path='public', hdrs=(*meta_tags, Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"), custom_style, adsense_script, Script(src="https://unpkg.com/lucide@latest")))
-
+services = [
+        
+        ("users", "Identité Digitale", "Un seul QR pour tous vos réseaux.", "/digital-id"),
+        ("qr-code", "QR Code Pro", "Lien personnalisé avec votre logo.", "/qr-tab"),
+        ("barcode", "Barcode Expert", "Codes EAN-13 et Code 128 pro.", "/barcode-tab"),
+        
+        ("wifi", "Accès Wi-Fi", "Connexion automatique sans mot de passe.", "/wifi-qr"),
+        ("contact","VCard","Créer votre carte de visite digitale", "/vcard"),
+        ("tag", "Étiquettes Soldes", "Prix barré + Barcode pour vos promos.", "/soldes"),
+        ("image", "Détourage IA", "Enlever le fond des photos de vos produits.", "/rembg-tab"),
+        ("message-circle", "QR WhatsApp", "Lien direct vers discussion.", "/whatsapp-qr")
+    ]
 # --- COMPOSANTS ---
 
 def Logo():
@@ -150,26 +161,34 @@ def SeoInstructional():
     return Section(
         Div(
             H2("Guide complet : Comment utiliser nos services gratuits"),
-            # Première ligne d'instructions
+            # Première ligne : Identité, QR et Contacts
             Grid(
                 Div(
                     H4("🚀 QR Codes avec Logo"), 
                     P("Entrez votre URL ou texte, personnalisez les couleurs et ajoutez le logo de votre marque. Téléchargez un QR code haute résolution prêt pour l'impression.")
                 ),
                 Div(
+                    H4("🌐 Identité Digitale"), 
+                    P("Regroupez tous vos réseaux sociaux (Facebook, Instagram, TikTok, Shopify) dans un seul QR Code unique pour faciliter l'accès à vos clients.")
+                ),
+                Div(
                     H4("👤 VCard : Carte de Visite"), 
                     P("Saisissez vos coordonnées pro (nom, tel, email). Le QR généré permet à vos clients d'enregistrer votre contact instantanément sur leur smartphone.")
                 ),
                 Div(
-                    H4("🏷️ Étiquettes de Soldes"), 
-                    P("Indiquez le prix d'origine et le prix remisé. Notre outil génère une étiquette visuelle avec prix barré et code-barres pour vos rayons.")
+                    H4("💬 QR WhatsApp Direct"), 
+                    P("Simplifiez vos commandes : générez un lien QR qui ouvre directement une discussion WhatsApp avec un message pré-rempli pour votre boutique.")
                 ),
             ),
-            # Deuxième ligne d'instructions
+            # Deuxième ligne : Logistique, Prix et Technique
             Grid(
                 Div(
+                    H4("🏷️ Étiquettes de Soldes"), 
+                    P("Indiquez le prix d'origine et le prix remisé. Notre outil génère une étiquette visuelle pro avec prix barré et code-barres pour vos rayons.")
+                ),
+                Div(
                     H4("🔢 Barcode EAN-13 & 128"), 
-                    P("Entrez vos chiffres pour générer des codes-barres conformes aux standards du commerce et de la logistique, lisibles par tous les scanners.")
+                    P("Entrez vos chiffres pour générer des codes-barres conformes aux standards du commerce et de la logistique, lisibles par tous les scanners laser.")
                 ),
                 Div(
                     H4("🖼️ Détourage IA de Produit"), 
@@ -177,7 +196,7 @@ def SeoInstructional():
                 ),
                 Div(
                     H4("📶 QR Code Accès Wi-Fi"), 
-                    P("Simplifiez la vie de vos clients : entrez le nom de votre réseau et le mot de passe pour générer un code de connexion automatique sans saisie manuelle.")
+                    P("Entrez le nom de votre réseau et le mot de passe pour générer un code de connexion automatique sécurisée sans saisie manuelle pour vos clients.")
                 ),
             ),
             cls="modern-card", 
@@ -202,7 +221,14 @@ def FooterSection():
     )
 
 def Layout(content, active_page, title="RetailBox"):
-    nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"), ("Étiquettes Soldes", "/soldes", "tag"), ("Barcode", "/barcode-tab", "barcode"), ("RemBg", "/rembg-tab", "image")]
+    nav_items = [("Accueil", "/", "home"), 
+                 ("QR Pro", "/qr-tab", "qr-code"), 
+                
+                   ("Barcode", "/barcode-tab", "barcode"),
+                    ("VCard", "/vcard", "contact"),
+                    ("Étiquettes Soldes", "/soldes", "tag"),
+                  
+                 ("RemBg", "/rembg-tab", "image")]
     return Title(f"{active_page} | {title}"), Main(
         Header(
             Logo(),
@@ -220,14 +246,7 @@ def Layout(content, active_page, title="RetailBox"):
 
 @rt("/")
 def get():
-    services = [
-        ("tag", "Étiquettes Soldes", "Prix barré + Barcode pour vos promos.", "/soldes"),
-        ("users", "Identité Digitale", "Un seul QR pour tous vos réseaux.", "/digital-id"),
-        ("qr-code", "QR Code Pro", "Lien personnalisé avec votre logo.", "/qr-tab"),
-        ("barcode", "Barcode Expert", "Codes EAN-13 et Code 128 pro.", "/barcode-tab"),
-        ("image", "Détourage IA", "Enlever le fond des photos produits.", "/rembg-tab"),
-        ("wifi", "Accès Wi-Fi", "Connexion automatique sans mot de passe.", "/wifi-qr"),
-    ]
+
     cards = Div(*[Card(
         Div(Safe(f'<i data-lucide="{s[0]}" style="width:32px; color:var(--primary);"></i>'), H3(s[1], style="margin:0;"), cls="card-header-flex"),
         P(s[2]),
@@ -318,6 +337,35 @@ def get():
 async def post(i:UploadFile):
     res = remove(await i.read()); s = base64.b64encode(res).decode()
     return Div(Img(src=f"data:image/png;base64,{s}"), Br(), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="nobg.png"), style="text-align:center")
+
+@rt("/vcard")
+def get():
+    content = Div(
+        H2("Générateur de Carte de Visite QR (VCard)"),
+        P("Remplissez vos informations professionnelles. Le QR Code permettra à vos clients d'enregistrer votre contact d'un simple scan."),
+        Form(
+            Grid(Input(name="fn", placeholder="Prénom"), Input(name="ln", placeholder="Nom")),
+            Grid(Input(name="org", placeholder="Entreprise / Boutique"), Input(name="tel", placeholder="Téléphone")),
+            Input(name="email", placeholder="Email professionnel"),
+            Button("🚀 Générer la VCard"), hx_post="/gen-vcard", hx_target="#vcard-out"
+        ), 
+        Div(id="vcard-out"), cls="modern-card"
+    )
+    return Layout(content, "VCard")
+
+@rt("/gen-vcard", methods=["POST"])
+async def post(fn:str, ln:str, org:str, tel:str, email:str):
+    # Format standard VCard 3.0
+    vcard_data = f"BEGIN:VCARD\nVERSION:3.0\nFN:{fn} {ln}\nORG:{org}\nTEL:{tel}\nEMAIL:{email}\nEND:VCARD"
+    return generate_qr_response(vcard_data, "contact.png")
+
+@rt("/whatsapp-qr")
+def get():
+    content = Div(H2("Générateur QR WhatsApp"), P("Créez un QR Code qui ouvre un chat WhatsApp avec vous."), Form(Input(name="phone", placeholder="Numéro (ex: 336...)"), Input(name="msg", placeholder="Message automatique"), Button("Générer"), hx_post="/gen-wa", hx_target="#o"), Div(id="o"), cls="modern-card")
+    return Layout(content, "WhatsApp")
+
+@rt("/gen-wa", methods=["POST"])
+async def post(phone:str, msg:str=""): return generate_qr_response(f"https://wa.me/{phone}?text={msg}", "wa.png")
 
 # --- PAGES LÉGALES ---
 @rt("/ads.txt")
