@@ -202,7 +202,7 @@ def SeoInstructional():
 
 
 def Layout(content, active_page, title="RetailBox"):
-    nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"), ("VCard", "/vcard", "contact"), ("Étiquettes Soldes", "/soldes", "tag"), ("RemBg", "/rembg-tab", "image")]
+    nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"),("Barcode", "/barcode-tab", "barcode"), ("VCard", "/vcard", "contact"), ("Étiquettes Soldes", "/soldes", "tag"), ("RemBg", "/rembg-tab", "image")]
     return Title(f"{active_page} | {title}"), Main(
         Header(
             Logo(),
