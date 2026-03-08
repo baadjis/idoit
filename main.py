@@ -111,9 +111,36 @@ custom_style = Style(f"""
     .card-header-flex {{ display: flex; align-items: center; gap: 15px; margin-bottom: 1.2rem; }}
     .modern-card footer {{ background: transparent !important; border-top: 1px solid #e2e8f0; padding: 1.2rem 0 0 0 !important; margin-top: auto !important; }}
 
-    button, .btn-full {{ width: 100% !important; padding: 0.9rem !important; border-radius: 14px !important; font-weight: 700 !important; border: 1px solid #e2e8f0; background: #f8fafc; color: #1e293b; cursor: pointer; transition: 0.3s; }}
-    button:hover, .btn-full:hover {{ background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important; color: white !important; border-color: transparent !important; }}
+    /* Style de base (Light Mode) */
+    button, .btn-full {{ 
+        width: 100% !important; 
+        padding: 0.9rem !important; 
+        border-radius: 14px !important; 
+        font-weight: 700 !important; 
+        border: 1px solid #e2e8f0; 
+        background: #f8fafc; 
+        color: #1e293b; 
+        cursor: pointer; 
+        transition: 0.3s; 
+    }}
 
+    /* Correction pour le Dark Mode */
+    @media (prefers-color-scheme: dark) {{
+        button, .btn-full {{
+            background: #334155 !important; /* Gris-bleu sombre pro */
+            color: #ffffff !important; 
+            border-color: #475569 !important;
+        }}
+    }}
+
+    /* Effet Hover (Identique dans les deux modes) */
+    button:hover, .btn-full:hover {{ 
+        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important; 
+        color: white !important; 
+        border-color: transparent !important; 
+        transform: scale(1.01);
+    }}
+                     
     /* FAQ ELEVATION */
     .faq-section {{ margin-top: 5rem; padding: 2rem; background: #ffffff; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }}
     @media (prefers-color-scheme: dark) {{ .faq-section {{ background: #1e293b !important; }} }}
@@ -198,11 +225,49 @@ def SeoInstructional():
             style="margin-top:4rem; border-style: solid; border-width: 2px; border-color: var(--primary);"
         )
     )
-
-
-
+def FooterSection():
+    return Footer(
+        # Section supérieure : 3 colonnes d'informations rassurer l'utilisateur
+        Div(
+            Div(
+                H4("🚀 Usage & Service"), 
+                P("Génération technique haute performance en mémoire vive pour retailers."), 
+                cls="footer-section"
+            ),
+            Div(
+                H4("🛡️ Confidentialité"), 
+                P("Zéro stockage sur nos serveurs. Vos données et images sont éphémères."), 
+                cls="footer-section"
+            ),
+            Div(
+                H4("👤 Propriété UGC"), 
+                P("User Generated Content : Vous détenez 100% des droits sur vos fichiers générés."), 
+                cls="footer-section"
+            ),
+            cls="footer-content"
+        ),
+        
+        # Section inférieure : Liens de navigation et mentions légales
+        Div(
+            A("À Propos", href="/about"), # Ajouté ici pour la cohérence
+            A("Conditions", href="/terms"), 
+            A("Vie Privée", href="/privacy"), 
+            A("UGC", href="/ugc"), 
+            A("Contact", href="/contact"),
+            Span(f"© {CURRENT_YEAR} RetailBox"),
+            cls="legal-links"
+        ),
+        cls="pro-footer"
+    )
 def Layout(content, active_page, title="RetailBox"):
-    nav_items = [("Accueil", "/", "home"), ("QR Pro", "/qr-tab", "qr-code"),("Barcode", "/barcode-tab", "barcode"), ("VCard", "/vcard", "contact"), ("Étiquettes Soldes", "/soldes", "tag"), ("RemBg", "/rembg-tab", "image")]
+    nav_items = [("Accueil", "/", "home"),   ("À Propos", "/about", "info"), # Ajoute cette ligne
+    ("Contact", "/contact", "mail"), 
+    #("QR Pro", "/qr-tab", "qr-code"),
+    #("Barcode", "/barcode-tab", "barcode"),
+     # ("VCard", "/vcard", "contact"), 
+      #("Étiquettes Soldes", "/soldes", "tag"),
+       # ("RemBg", "/rembg-tab", "image")
+    ]
     return Title(f"{active_page} | {title}"), Main(
         Header(
             Logo(),
@@ -212,7 +277,7 @@ def Layout(content, active_page, title="RetailBox"):
         Div(P("Publicité", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
         Div(Section(content), Aside(Div(P("Publicité"), style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; height:600px; display:flex; align-items:center; justify-content:center; position:sticky; top:20px;"), cls="sidebar"), cls="app-grid"),
         SeoInstructional(), FaqSection(),
-        Footer(Div(Div(H4("Usage"), P("Génération gratuite en mémoire vive."), cls="footer-section"), Div(H4("Confidentialité"), P("Zéro stockage sur serveurs."), cls="footer-section"), Div(H4("Propriété"), P("100% droits UGC (User Generated Content)."), cls="footer-section"), cls="footer-content"), Div(A("Conditions", href="/terms"), A("Vie Privée", href="/privacy"), A("UGC", href="/ugc"), A("Contact", href="/contact"), Span(f"© {CURRENT_YEAR} RetailBox"), cls="legal-links"), cls="pro-footer"),
+        FooterSection(),
         Script("lucide.createIcons();"), cls="container"
     )
 
@@ -578,6 +643,50 @@ def get():
 
 @rt("/contact")
 def get(): return Layout(Div(H2("Contact"), P("utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
+
+@rt("/about")
+def get():
+    content = Div(
+        H2("À propos de RetailBox", cls="gradient-text"),
+        P("RetailBox est une suite d'outils techniques dédiée à l'optimisation des opérations pour le commerce moderne et les Small Businesses."),
+        
+        H4("Accompagner la croissance des entreprises"),
+        P("""Nous centralisons les ressources critiques pour les entrepreneurs et gestionnaires de points de vente. 
+          De la boutique physique au site e-commerce, nous fournissons les standards technologiques 
+          indispensables pour rester compétitif dans un environnement digital en constante évolution."""),
+        
+        Grid(
+            Div(
+                H5("📦 Gestion de Stock & Inventaire"),
+                P("Nous simplifions la logistique commerciale avec des générateurs de codes-barres conformes (EAN-13, Code 128). Nous facilitons l'organisation de vos stocks et l'étiquetage précis de vos produits.")
+            ),
+            Div(
+                H5("🍽️ Solutions pour Restaurants"),
+                P("Nous modernisons l'expérience client . Nous permettons un accès instantané à vos cartes et tarifs , optimisant ainsi votre service en salle.")
+            )
+        ),
+        
+        Grid(
+            Div(
+                H5("🌐 Identité Digitale"),
+                P("Nous optimisons votre visibilité professionnelle avec des Social Cards et VCards intelligentes. Nous créons un point d'entrée unique pour regrouper vos réseaux sociaux et vos canaux de vente.")
+            ),
+            Div(
+                H5("📸 Optimisation Produit"),
+                P("Nous valorisons vos articles de vente grâce à notre IA de détourage. Nous transformons vos photos brutes en images produits de qualité studio pour vos fiches e-commerce et vos catalogues.")
+            )
+        ),
+        
+        H4("Notre engagement pour vos données"),
+        P("""Nous appliquons une politique de confidentialité rigoureuse. Chaque traitement technique est 
+          exécuté en mémoire vive (RAM) de manière isolée. Nous ne conservons aucune donnée commerciale, 
+          photo produit ou information confidentielle sur nos serveurs. Nous garantissons votre 
+          propriété exclusive sur 100% des contenus générés (UGC) via notre plateforme."""),
+        
+        cls="modern-card", style="max-width: 900px; margin: auto; padding: 3rem; line-height: 1.8;"
+    )
+    return Layout(content, "À Propos")
+
 
 if __name__ == "__main__":
     import uvicorn
