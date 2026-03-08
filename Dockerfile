@@ -1,32 +1,31 @@
 FROM python:3.12-slim
 
-# Dépendances système
+# 1. Installation des dépendances système
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# 2. Création d'un utilisateur non-root (obligatoire pour la stabilité sur HF)
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH \
+    U2NET_HOME=/home/user/app/data
 
-# On crée le dossier du modèle DANS /app pour qu'il soit visible
-RUN mkdir -p /app/data/.u2net
+WORKDIR $HOME/app
 
-# Téléchargement du modèle pendant le BUILD
-RUN curl -L https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx -o /app/data/.u2net/u2net.onnx
+# 3. Création du dossier et téléchargement du modèle PENDANT LE BUILD
+# Note le chemin : data/.u2net
+RUN mkdir -p $HOME/app/data/.u2net && \
+    curl -L https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx -o $HOME/app/data/.u2net/u2net.onnx
 
-# On donne les permissions totales sur ce dossier
-RUN chmod -R 777 /app/data/.u2net
+# 4. Installation des dépendances Python
+COPY --chown=user . .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Copie du projet
-COPY . .
-
-# Installation des libs
-RUN pip install --no-cache-dir -r requirements.txt
-
-# --- LES VARIABLES D'ENVIRONNEMENT CRUCIALES ---
-# On force rembg à regarder UNIQUEMENT dans notre dossier local
-ENV U2NET_HOME=/app/data/.u2net
+# 5. Variables d'environnement
 ENV PORT=7860
 EXPOSE 7860
 
