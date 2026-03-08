@@ -129,7 +129,20 @@ custom_style = Style(f"""
     @media (max-width: 1024px) {{ .app-grid {{ grid-template-columns: 1fr; }} }}
 """)
 
-app, rt = fast_app(static_path='public', hdrs=(*meta_tags, Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"), custom_style, adsense_script, Script(src="https://unpkg.com/lucide@latest")))
+ga_lib = Script(src="https://www.googletagmanager.com/gtag/js?id=G-YV2LEDEMR8", async_=True)
+
+# Le deuxième script qui configure ton ID
+ga_config = Script("""
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-YV2LEDEMR8');
+""")
+
+app, rt = fast_app(static_path='public', hdrs=(*meta_tags, Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"), custom_style,
+                                               ga_lib,         
+        ga_config, adsense_script, Script(src="https://unpkg.com/lucide@latest")))
+
 
 # --- COMPOSANTS ---
 
