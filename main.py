@@ -9,60 +9,19 @@ from barcode.writer import ImageWriter
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import os
-
+from constants import services,faq_data,adsense_script_src,ga_lib_src,guide_data
+from styles import styles
 os.environ['U2NET_HOME'] = '/tmp'
 
 # --- CONFIGURATION ---
 CURRENT_YEAR = datetime.now().year
 
 adsense_script = Script(
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4081303157053373",
+    src=adsense_script_src,
     async_=True,
     crossorigin="anonymous"
 )
 
-# --- TA LISTE DE SERVICES (SOURCE DE VÉRITÉ) ---
-services = [
-    ("users", "Identité Digitale", "Un seul QR pour regrouper Facebook, Instagram, TikTok, Spotify et plus.", "/digital-id"),
-    ("qr-code", "QR Code Pro", "Lien personnalisé avec logo. Idéal pour menus restaurant PDF ou sites web.", "/qr-tab"),
-    ("tag", "Étiquettes Soldes", "Prix barré + Barcode. Générez vos étiquettes promos prêtes à imprimer.", "/soldes"),
-    ("barcode", "Barcode Expert", "Codes EAN-13 et Code 128 pro pour la gestion de vos stocks.", "/barcode-tab"),
-    ("contact", "VCard Contact", "QR Code de contact. Vos clients enregistrent votre fiche d'un seul scan.", "/vcard"),
-    ("message-circle", "QR WhatsApp", "Ouvrez une discussion directe avec vos clients via un lien QR.", "/whatsapp-qr"),
-    ("image", "RemBg IA", "Suppression de fond par IA pour vos photos produits (Shopify, Vinted).", "/rembg-tab"),
-    ("wifi", "Accès Wi-Fi", "Connexion automatique sécurisée pour vos clients sans mot de passe.", "/wifi-qr"),
-]
-
-faq_data = [
-    {
-        "q": "Comment générer un QR code pour mon menu restaurant en PDF ?",
-        "a": "Hébergez votre menu sur Google Drive ou Dropbox, copiez le lien de partage public et utilisez notre outil 'QR Pro'. Vous pouvez même ajouter le logo de votre établissement pour un rendu professionnel."
-    },
-    {
-        "q": "Le générateur d'étiquettes de soldes est-il vraiment gratuit ?",
-        "a": "Oui, RetailBox permet de créer gratuitement des étiquettes avec prix barré et code-barres EAN-13. C'est un outil conçu pour aider les commerçants à préparer leurs périodes de promotions sans frais supplémentaires."
-    },
-    {
-        "q": "Comment regrouper Instagram, TikTok et Facebook dans un seul QR ?",
-        "a": "Utilisez notre service 'Identité Digitale'. En saisissant les liens de vos différents profils, vous générez une Social Card unique qui centralise toute votre présence en ligne pour vos clients."
-    },
-    {
-        "q": "Comment connecter mes clients au Wi-Fi sans donner le mot de passe ?",
-        "a": "Grâce à notre générateur de QR Code Wi-Fi, vous entrez le nom de votre réseau et la clé. Vos clients n'ont qu'à scanner le code avec leur smartphone pour être connectés instantanément et en toute sécurité."
-    },
-    {
-        "q": "Comment créer un lien QR direct vers mon WhatsApp ?",
-        "a": "Utilisez l'outil 'QR WhatsApp'. Entrez votre numéro de téléphone et un message de bienvenue automatique. Le QR code ouvrira directement une discussion avec votre boutique."
-    },
-    {
-        "q": "Peut-on supprimer l'arrière-plan d'une photo produit par IA ?",
-        "a": "Absolument. Notre outil 'RemBg' utilise une intelligence artificielle pour détourer automatiquement vos photos. Vous obtenez un fichier PNG transparent de qualité studio en moins de 10 secondes."
-    },
-    {
-        "q": "Quels formats de codes-barres sont disponibles pour mon stock ?",
-        "a": "Nous supportons le format EAN-13 (12 chiffres) pour les produits destinés à la vente, ainsi que le format Code 128 pour la logistique et l'inventaire interne de votre magasin."
-    }
-]
 
 # --- SEO & META TAGS ---
 meta_tags = (
@@ -74,90 +33,9 @@ meta_tags = (
 )
 
 # --- STYLE STABILISÉ & TYPOGRAPHIE ---
-custom_style = Style(f"""
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    
-    :root {{
-        --pico-font-family: 'Plus Jakarta Sans', sans-serif;
-        --primary: #4f46e5;
-        --secondary: #9333ea;
-        --pico-color: #1e293b;
-        --pico-background-color: #ffffff;
-    }}
+custom_style = Style(styles)
 
-    /* FIX DARK MODE IPHONE / ANDROID */
-    @media (prefers-color-scheme: dark) {{
-        :root {{ --pico-color: #f8fafc !important; --pico-background-color: #0f172a !important; }}
-        body {{ background-color: #0f172a !important; color: #f8fafc !important; }}
-        .modern-card {{ background: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }}
-        p, h2, h3, h4, li, span, label, summary, details {{ color: #f8fafc !important; }}
-        .nav-pills a {{ background: #1e293b !important; color: white !important; }}
-    }}
-
-    body {{ margin: 0; padding: 0; background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%); background-attachment: fixed; min-height: 100vh; }}
-    a {{ text-decoration: none !important; border: none !important; color: inherit; }}
-
-    .gradient-text {{ background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; display: inline-block; }}
-    .hero-title {{ font-size: clamp(1.8rem, 8vw, 2.8rem); font-weight: 800; text-align: center; margin: 1.5rem 0; }}
-
-    .nav-scroll-container {{ width: 100%; overflow-x: auto; padding: 10px 0; }}
-    .nav-pills {{ display: flex; gap: 0.6rem; min-width: max-content; padding: 0 1rem; justify-content: center; }}
-    .nav-pills a {{ padding: 0.6rem 1.2rem; border-radius: 12px; background: white; border: 1px solid #e2e8f0; font-weight: 700; color: #1e293b; }}
-    .nav-pills a.active {{ background: var(--primary) !important; color: white !important; border-color: var(--primary); }}
-
-    .services-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: 2rem; margin-top: 2rem; }}
-    .modern-card {{ border: 1px solid #e2e8f0; padding: 2rem; border-radius: 24px; height: 100%; display: flex; flex-direction: column; background: #ffffff; transition: 0.3s ease; }}
-    .modern-card:hover {{ transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }}
-    .card-header-flex {{ display: flex; align-items: center; gap: 15px; margin-bottom: 1.2rem; }}
-    .modern-card footer {{ background: transparent !important; border-top: 1px solid #e2e8f0; padding: 1.2rem 0 0 0 !important; margin-top: auto !important; }}
-
-    /* Style de base (Light Mode) */
-    button, .btn-full {{ 
-        width: 100% !important; 
-        padding: 0.9rem !important; 
-        border-radius: 14px !important; 
-        font-weight: 700 !important; 
-        border: 1px solid #e2e8f0; 
-        background: #f8fafc; 
-        color: #1e293b; 
-        cursor: pointer; 
-        transition: 0.3s; 
-    }}
-
-    /* Correction pour le Dark Mode */
-    @media (prefers-color-scheme: dark) {{
-        button, .btn-full {{
-            background: #334155 !important; /* Gris-bleu sombre pro */
-            color: #ffffff !important; 
-            border-color: #475569 !important;
-        }}
-    }}
-
-    /* Effet Hover (Identique dans les deux modes) */
-    button:hover, .btn-full:hover {{ 
-        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important; 
-        color: white !important; 
-        border-color: transparent !important; 
-        transform: scale(1.01);
-    }}
-                     
-    /* FAQ ELEVATION */
-    .faq-section {{ margin-top: 5rem; padding: 2rem; background: #ffffff; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }}
-    @media (prefers-color-scheme: dark) {{ .faq-section {{ background: #1e293b !important; }} }}
-    details {{ background: rgba(0,0,0,0.02); padding: 1.2rem; border-radius: 16px; margin-bottom: 1rem; }}
-    summary {{ font-weight: 700; cursor: pointer; }}
-
-    /* FOOTER GRADIENT */
-    footer.pro-footer {{ background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important; padding: 4rem 1rem; margin-top: 6rem; color: white !important; border-radius: 16px;}}
-    footer.pro-footer h4, footer.pro-footer p, footer.pro-footer a, footer.pro-footer span {{ color: white !important; }}
-    .legal-links {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.9rem; }}
-
-    .top-ad-banner {{ width: 100%; max-width: 1100px; margin: 1rem auto; min-height: 90px; background: rgba(0,0,0,0.02); border: 1px dashed #cbd5e1; border-radius: 16px; display: flex; align-items: center; justify-content: center; }}
-    .app-grid {{ display: grid; grid-template-columns: 1fr 320px; gap: 2rem; max-width: 1200px; margin: auto; padding: 0 1rem; }}
-    @media (max-width: 1024px) {{ .app-grid {{ grid-template-columns: 1fr; }} }}
-""")
-
-ga_lib = Script(src="https://www.googletagmanager.com/gtag/js?id=G-YV2LEDEMR8", async_=True)
+ga_lib = Script(src=ga_lib_src, async_=True)
 
 # Le deuxième script qui configure ton ID
 ga_config = Script("""
@@ -250,6 +128,8 @@ def FooterSection():
         # Section inférieure : Liens de navigation et mentions légales
         Div(
             A("À Propos", href="/about"), # Ajouté ici pour la cohérence
+            A("Guide Complet", href="/guide"), # Ajouté
+            A("FAQ", href="/faq"), 
             A("Conditions", href="/terms"), 
             A("Vie Privée", href="/privacy"), 
             A("UGC", href="/ugc"), 
@@ -260,13 +140,12 @@ def FooterSection():
         cls="pro-footer"
     )
 def Layout(content, active_page, title="RetailBox"):
-    nav_items = [("Accueil", "/", "home"),   ("À Propos", "/about", "info"), # Ajoute cette ligne
-    ("Contact", "/contact", "mail"), 
-    #("QR Pro", "/qr-tab", "qr-code"),
-    #("Barcode", "/barcode-tab", "barcode"),
-     # ("VCard", "/vcard", "contact"), 
-      #("Étiquettes Soldes", "/soldes", "tag"),
-       # ("RemBg", "/rembg-tab", "image"       )
+    nav_items = [
+        ("Accueil", "/", "home"), 
+        ("Guide", "/guide", "book-open"), 
+        ("FAQ", "/faq", "help-circle"), 
+        ("À Propos", "/about", "info"),
+        ("Contact", "/contact", "mail")
     ]
     return Title(f"{active_page} | {title}"), Main(
         Header(
@@ -275,10 +154,17 @@ def Layout(content, active_page, title="RetailBox"):
             Div(Nav(Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:18px"></i> {name}'), href=url, cls="active" if active_page == name else "") for name, url, icon in nav_items], cls="nav-pills")), cls="nav-scroll-container")
         ),
         Div(P("Publicité", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
-        Div(Section(content), Aside(Div(P("Publicité"), style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; height:600px; display:flex; align-items:center; justify-content:center; position:sticky; top:20px;"), cls="sidebar"), cls="app-grid"),
-        SeoInstructional(), FaqSection(),
+        
+        # Ici, on n'a que le contenu spécifique de la page
+        Div(
+            Section(content), 
+            Aside(Div(P("Publicité"), style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; height:600px; display:flex; align-items:center; justify-content:center; position:sticky; top:20px;"), cls="sidebar"), 
+            cls="app-grid"
+        ),
+        
         FooterSection(),
-        Script("lucide.createIcons();"), cls="container"
+        Script("lucide.createIcons();"), 
+        cls="container"
     )
 
 def FaqSection():
@@ -306,13 +192,21 @@ def DataRow(prefix):
 
 @rt("/")
 def get():
+    # On affiche les 8 cartes de services
     cards = Div(*[Card(
-        Div(Safe(f'<i data-lucide="{s[0]}" style="width:28px; color:var(--primary);"></i>'), H3(s[1], style="margin:0; font-size:1.1rem;"), cls="card-header-flex"),
+        Div(Safe(f'<i data-lucide="{s[0]}" style="width:32px; color:var(--primary);"></i>'), H3(s[1], style="margin:0; font-size:1.1rem;"), cls="card-header-flex"),
         P(s[2], style="font-size:0.9rem;"),
         Footer(A(Button("Ouvrir l'outil", cls="btn-full"), href=s[3])), cls="modern-card"
     ) for s in services], cls="services-grid")
-    return Layout(cards, "Accueil")
-
+    
+    # On ajoute juste un petit titre SEO avant le footer uniquement sur l'accueil
+    content = Div(
+        cards,
+        H2("Solutions digitales pour Small Business", style="margin-top:4rem; text-align:center;"),
+        P("Accédez à nos tutoriels détaillés dans la page Guide pour optimiser vos ventes.", style="text-align:center; opacity:0.7;")
+    )
+    
+    return Layout(content, "Accueil")
 # --- OUTILS ---
 
 @rt("/digital-id")
@@ -687,7 +581,89 @@ def get():
     )
     return Layout(content, "À Propos")
 
+@rt("/faq")
+def get():
+    content = Div(
+        H2("Foire aux Questions (FAQ)", cls="gradient-text"),
+        P("Retrouvez toutes les réponses pour optimiser votre commerce avec nos outils digitaux."),
+        
+        Div(
+            *[Details(
+                Summary(item["q"]), 
+                # On utilise NotStr pour permettre le HTML (les liens) dans la réponse
+                P(NotStr(item["a"]))
+              ) for item in faq_data],
+            cls="faq-section"
+        ),
+        
+        # Petit call-to-action en bas de FAQ
+        Div(
+            H4("Vous ne trouvez pas votre réponse ?"),
+            A(Button("Contactez notre support gratuit", cls="outline"), href="/contact"),
+            style="margin-top: 3rem; text-align: center;"
+        ),
+        
+        cls="modern-card", style="max-width: 900px; margin: auto; padding: 3rem;"
+    )
+    return Layout(content, "FAQ")
 
+@rt("/guide")
+def get():
+    # Mapping sur guide_data avec un style "Documentation Pro"
+    guide_cards = Div(*[
+        Div(
+            # En-tête de carte : Icône + Titre alignés
+            Div(
+                Safe(f'<i data-lucide="{item["icon"]}" style="width:32px; height:32px; color:var(--primary); stroke-width:2.5px;"></i>'),
+                H4(item["title"]),
+                style="display:flex; align-items:center; gap:15px; margin-bottom:0.5rem;"
+            ),
+            # Description avec support des liens SEO
+            P(NotStr(item["desc"])),
+            
+            # Bouton d'action en bas de carte
+            A(Button(f"Utiliser l'outil {item['title']}", cls="outline"), 
+              href=item["link"], style="margin-top:auto;"),
+            
+            cls="guide-card"
+        ) for item in guide_data
+    ], cls="guide-grid")
+
+    content = Div(
+        # Header de la page
+        Div(
+            H2("Guide d'utilisation professionnel", cls="gradient-text", style="font-size:3rem;"),
+            P("Apprenez à configurer vos outils pour une performance maximale en boutique et en ligne.", 
+              style="font-size:1.2rem; opacity:0.8;"),
+            style="margin-bottom:4rem; text-align:center;"
+        ),
+        
+        # La Grille de guides
+        guide_cards,
+        
+        # Section de conseils techniques "Expert"
+        Div(
+            H3("💡 Conseils d'expert pour le Retail", style="margin-bottom:1.5rem;"),
+            Grid(
+                Div(
+                    H5("Qualité d'impression"),
+                    P("Pour vos codes-barres EAN-13, utilisez une imprimante thermique à 300 DPI minimum pour éviter les erreurs de lecture en caisse.")
+                ),
+                Div(
+                    H5("Format de fichier"),
+                    P("Privilégiez le format PNG pour vos QR Codes de menu restaurant. Il conserve la netteté des pixels même lors d'un agrandissement sur support rigide.")
+                ),
+                Div(
+                    H5("Optimisation IA"),
+                    P("Le détourage automatique (RemBg) est optimal lorsque le produit est photographié sur un fond uni, même s'il n'est pas parfaitement blanc.")
+                )
+            ),
+            cls="modern-card", 
+            style="margin-top:5rem; padding:3rem; border-left: 6px solid var(--primary); background: rgba(79, 70, 229, 0.03);"
+        ),
+        style="padding: 2rem 0;"
+    )
+    return Layout(content, "Guide")
 if __name__ == "__main__":
     import uvicorn
    
