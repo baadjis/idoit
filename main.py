@@ -266,7 +266,7 @@ def Layout(content, active_page, title="RetailBox"):
     #("Barcode", "/barcode-tab", "barcode"),
      # ("VCard", "/vcard", "contact"), 
       #("Étiquettes Soldes", "/soldes", "tag"),
-       # ("RemBg", "/rembg-tab", "image")
+       # ("RemBg", "/rembg-tab", "image"       )
     ]
     return Title(f"{active_page} | {title}"), Main(
         Header(
