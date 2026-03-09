@@ -535,9 +535,72 @@ def get():
     )
     return Layout(content, "UGC")
 
-@rt("/contact")
-def get(): return Layout(Div(H2("Contact"), P("utilitybox.project@gmail.com"), cls="modern-card"), "Contact")
 
+
+@rt("/contact")
+def get():
+    # Remplace par ton ID Formspree réel
+    formspree_id = "maqpqjze" 
+    
+    # On définit le script pour gérer l'envoi sans redirection
+    ajax_script = Script(f"""
+        async function handleSubmit(event) {{
+            event.preventDefault();
+            const status = document.getElementById("contact-status");
+            const data = new FormData(event.target);
+            const btn = event.target.querySelector("button");
+            
+            btn.disabled = true;
+            btn.innerText = "Envoi en cours...";
+            
+            fetch(event.target.action, {{
+                method: 'POST',
+                body: data,
+                headers: {{ 'Accept': 'application/json' }}
+            }}).then(response => {{
+                if (response.ok) {{
+                    status.innerHTML = "<div class='modern-card' style='background:#dcfce7; color:#166534; padding:1rem; margin-bottom:1rem; border:1px solid #166534;'>✅ Merci ! Votre message a été envoyé avec succès.</div>";
+                    event.target.reset();
+                }} else {{
+                    status.innerHTML = "❌ Une erreur est survenue. Veuillez réessayer.";
+                }}
+            }}).catch(error => {{
+                status.innerHTML = "❌ Erreur de connexion.";
+            }}).finally(() => {{
+                btn.disabled = false;
+                btn.innerText = "🚀 Envoyer le message";
+            }});
+        }}
+    """)
+
+    content = Div(
+        H2("Contactez l'équipe RetailBox", cls="gradient-text"),
+        P("Une suggestion technique ou un partenariat ? Utilisez le formulaire ci-dessous."),
+        
+        # Zone pour afficher le message de succès/erreur
+        Div(id="contact-status"),
+        
+        Form(
+            Label("Votre adresse e-mail", 
+                  Input(type="email", name="email", placeholder="votre@email.com", required=True)),
+            
+            Label("Sujet", 
+                  Input(name="subject", placeholder="Ex: Support QR Code", required=True)),
+            
+            Label("Votre message", 
+                  Textarea(name="message", placeholder="Comment pouvons-nous vous aider ?", rows=6, required=True)),
+            
+            Input(type="hidden", name="_gotcha", style="display:none"), # Anti-spam
+            
+            Button("🚀 Envoyer le message", type="submit", cls="btn-full"),
+            
+            action=f"https://formspree.io/f/{formspree_id}",
+            onsubmit="handleSubmit(event)" # On appelle le script ici
+        ),
+        ajax_script, # On injecte le script sur la page
+        cls="modern-card", style="max-width: 700px; margin: auto; padding: 3rem;"
+    )
+    return Layout(content, "Contact")
 @rt("/about")
 def get():
     content = Div(
@@ -593,7 +656,7 @@ def get():
                 # On utilise NotStr pour permettre le HTML (les liens) dans la réponse
                 P(NotStr(item["a"]))
               ) for item in faq_data],
-            cls="faq-section"
+            
         ),
         
         # Petit call-to-action en bas de FAQ
