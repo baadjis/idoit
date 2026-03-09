@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from fasthtml.common import *
 from starlette.responses import PlainTextResponse
 import qrcode
@@ -11,7 +12,10 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 from constants import services,faq_data,adsense_script_src,ga_lib_src,guide_data
 from styles import styles
+
+load_dotenv() 
 os.environ['U2NET_HOME'] = '/tmp'
+FORMSPREE_ID = os.environ.get("FORMSPREE_ID", "TON_ID_DE_TEST")
 
 # --- CONFIGURATION ---
 CURRENT_YEAR = datetime.now().year
@@ -540,7 +544,7 @@ def get():
 @rt("/contact")
 def get():
     # Remplace par ton ID Formspree réel
-    formspree_id = "maqpqjze" 
+    
     
     # On définit le script pour gérer l'envoi sans redirection
     ajax_script = Script(f"""
@@ -594,7 +598,7 @@ def get():
             
             Button("🚀 Envoyer le message", type="submit", cls="btn-full"),
             
-            action=f"https://formspree.io/f/{formspree_id}",
+            action=f"https://formspree.io/f/{FORMSPREE_ID }",
             onsubmit="handleSubmit(event)" # On appelle le script ici
         ),
         ajax_script, # On injecte le script sur la page
