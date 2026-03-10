@@ -140,7 +140,7 @@ styles= f"""
     }}
     /* BOUTON SUPPRIMER ROUGE FIXE */
     .btn-remove-final {{
-        background-color: #ef4444 !important;
+        background-color: #ef4444 !!important;
         color: white !important;
         border: none !important;
         width: 45px !important;
