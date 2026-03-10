@@ -138,25 +138,25 @@ styles= f"""
         margin-bottom: 1rem;
         border: 1px solid #e2e8f0;
     }}
-
-    /* Bouton supprimer ultra-visible */
-    .btn-remove {{
-        background: #ef4444 !important; /* Rouge vif */
+    /* BOUTON SUPPRIMER ROUGE FIXE */
+    .btn-remove-final {{
+        background-color: #ef4444 !important;
         color: white !important;
         border: none !important;
-        height: 45px;
-        width: 45px;
-        display: flex;
+        width: 45px !important;
+        height: 45px !important;
+        display: flex !important;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        cursor: pointer;
+        border-radius: 12px !important;
         padding: 0 !important;
     }}
 
+
     @media (max-width: 600px) {{
-        .social-row {{grid-template-columns: 1fr 50px; }}
+        .social-row {{ grid-template-columns: 1fr 50px; }}
         .social-row select, .social-row input {{ grid-column: 1 / 2; }}
-        .social-row .btn-remove {{ grid-column: 2 / 3; grid-row: 1 / 3; height: 100%; }}
+        .social-row .btn-remove-final {{ grid-column: 2 / 3; grid-row: 1 / 3; height: 100% !important; }}
     }}
+
 """

@@ -217,72 +217,54 @@ def get():
     
     return Layout(content, "Accueil")
 # --- OUTILS ---
-@rt("/add-social-row")
-def get():
+
+def SocialRow():
     return Div(
-        Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
-               name="social_networks", onchange="checkDuplicates()"),
-        
-        Input(name="social_handles", placeholder="Lien ou identifiant @", required=True),
-        
-        Button(Safe('<i data-lucide="trash-2" style="width:20px; height:20px;"></i>'), 
-               type="button", onclick="this.parentElement.remove(); checkDuplicates();", 
-               cls="btn-remove"),
-        
+        Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], name="social_networks", onchange="checkDuplicates()"),
+        Input(name="social_handles", placeholder="Lien ou @identifiant", required=True),
+        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", onclick="this.parentElement.remove(); checkDuplicates();", cls="btn-remove-final"),
         cls="social-row"
     )
 
+@rt("/add-social-row")
+def get(): return SocialRow()
+
 @rt("/digital-id")
 def get():
-    # Script JavaScript pour gérer les doublons et les icônes
     js_logic = Script("""
         function checkDuplicates() {
             const selects = document.querySelectorAll('select[name="social_networks"]');
             const selectedValues = Array.from(selects).map(s => s.value);
-            
             selects.forEach(select => {
                 const options = select.options;
                 for (let i = 0; i < options.length; i++) {
                     const isSelectedElsewhere = selectedValues.filter(v => v === options[i].value).length > 1;
-                    if (isSelectedElsewhere && options[i].value !== select.value) {
-                        options[i].disabled = true;
-                    } else {
-                        options[i].disabled = false;
-                    }
+                    options[i].disabled = (isSelectedElsewhere && options[i].value !== select.value);
                 }
             });
             if (window.lucide) lucide.createIcons();
         }
-        // Exécuter au chargement
         document.body.addEventListener('htmx:afterSwap', checkDuplicates);
     """)
 
     content = Div(
         H2("Votre Identité Digitale", cls="gradient-text"),
-        P("Ajoutez vos réseaux sociaux. Notre système empêche les doublons pour garantir un QR Code propre."),
-        
+        P("Centralisez tous vos réseaux. Sélectionnez une plateforme et ajoutez votre lien."),
         Form(
-            # 1. ZONE DES INPUTS (Toujours en haut)
-            Div(id="social-list", hx_get="/add-social-row", hx_trigger="load"),
-            
-            # 2. ZONE DES ACTIONS (Séparée et en bas)
+            # 1. ZONE DES INPUTS (Générée côté serveur immédiatement)
+            Div(SocialRow(), id="social-list"),
+            # 2. ZONE DES ACTIONS
             Div(
-                Button("+ Ajouter un réseau", type="button", 
-                       hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend",
-                       cls="outline secondary", style="margin-bottom:1rem;"),
-                
-                Button("🚀 Générer mon Identité Digitale", type="submit", cls="btn-full"),
-                
-                style="margin-top: 2rem; border-top: 2px solid #f1f5f9; padding-top: 2rem;"
+                Button("+ Ajouter un réseau", type="button", hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend", cls="outline"),
+                Button("🚀 Générer ma Social Card", type="submit", cls="btn-full"),
+                style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 2rem;"
             ),
-            
             hx_post="/gen-id", hx_target="#id-out"
         ),
-        Div(id="id-out"),
-        js_logic,
-        cls="modern-card"
+        Div(id="id-out"), js_logic, cls="modern-card"
     )
     return Layout(content, "Accueil")
+
 
 @rt("/gen-id", methods=["POST"])
 async def post(social_networks: list = None, social_handles: list = None):
