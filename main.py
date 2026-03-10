@@ -10,7 +10,7 @@ from barcode.writer import ImageWriter
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import os
-from constants import services,faq_data,adsense_script_src,ga_lib_src,guide_data
+from constants import SOCIAL_NETWORKS, services,faq_data,adsense_script_src,ga_lib_src,guide_data
 from styles import styles
 
 load_dotenv() 
@@ -213,31 +213,137 @@ def get():
     return Layout(content, "Accueil")
 # --- OUTILS ---
 
+@rt("/add-social-row")
+def get():
+    return Div(
+        # Sélecteur verrouillé sur notre liste SOCIAL_NETWORKS
+        Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
+               name="social_networks", style="flex: 1; min-width: 140px;"),
+        
+        # Champ pour le lien ou l'identifiant
+        Input(name="social_handles", placeholder="Lien ou @identifiant", style="flex: 2;"),
+        
+        # Bouton suppression (Poubelle Lucide)
+        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", 
+               onclick="this.parentElement.remove()", 
+               style="width:45px; background:transparent !important; border:none; color:#ef4444; padding:0;"),
+        
+        cls="key-value-row", 
+        style="display:flex; gap:10px; margin-bottom:12px; align-items: center;"
+    )
+
 @rt("/digital-id")
 def get():
-    content = Div(H2("Votre Identité Digitale"), P("Regroupez vos réseaux sociaux dans un seul QR Code."), Form(Grid(Input(name="fb", placeholder="Facebook"), Input(name="ig", placeholder="Instagram")), Grid(Input(name="tk", placeholder="TikTok"), Input(name="sp", placeholder="Spotify")), Div(id="soc-kv"), Button("+ Autre réseau (X, Shop...)", type="button", hx_get="/add-soc", hx_target="#soc-kv", hx_swap="beforeend", cls="outline"), Button("🚀 Générer ma Social Card"), hx_post="/gen-id", hx_target="#o"), Div(id="o"), cls="modern-card")
+    content = Div(
+        H2("Votre Identité Digitale unique", cls="gradient-text"),
+        P("Instructions : Sélectionnez vos réseaux et saisissez vos identifiants. Nous générons un point d'entrée unique pour toute votre présence en ligne."),
+        
+        Form(
+            # Le conteneur où les lignes s'ajoutent
+            Div(id="social-list", hx_get="/add-social-row", hx_trigger="load"),
+            
+            # Bouton d'ajout
+            Button("+ Ajouter un réseau social", type="button", 
+                   hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend",
+                   cls="outline secondary", style="width:100%; margin-bottom:20px;"),
+            
+            Button("🚀 Générer ma Social Card", cls="btn-full"),
+            hx_post="/gen-id", hx_target="#id-out"
+        ),
+        Div(id="id-out"),
+        cls="modern-card"
+    )
     return Layout(content, "Accueil")
 
-@rt("/add-soc")
-def get(): return DataRow("extra")
 
 @rt("/gen-id", methods=["POST"])
-async def post(fb:str="", ig:str="", tk:str="", sp:str="", extra_keys:list=None, extra_vals:list=None):
-    d = [f"FB: {fb}", f"IG: {ig}", f"TK: {tk}", f"SP: {sp}"]
-    if extra_keys:
-        k_list = [extra_keys] if isinstance(extra_keys, str) else extra_keys
-        v_list = [extra_vals] if isinstance(extra_vals, str) else extra_vals
-        d += [f"{k}: {v}" for k,v in zip(k_list, v_list) if k.strip()]
-    return generate_qr_response("\n".join(d), "social.png")
+async def post(social_networks: list = None, social_handles: list = None):
+    # Sécurité : FastHTML renvoie une string si 1 seul champ, une liste si plusieurs
+    nets = [social_networks] if isinstance(social_networks, str) else (social_networks or [])
+    hands = [social_handles] if isinstance(social_handles, str) else (social_handles or [])
+    
+    # Construction propre du texte
+    data_lines = ["MA PRÉSENCE DIGITALE :"]
+    for n, h in zip(nets, hands):
+        if h.strip():
+            data_lines.append(f"• {n}: {h.strip()}")
+    
+    if len(data_lines) <= 1:
+        return P("Veuillez ajouter au moins un réseau social.", style="color:red; font-weight:bold;")
+
+    final_content = "\n".join(data_lines)
+    
+    # Appel de ta fonction stable définie précédemment
+    return generate_qr_response(final_content, "identity-retailbox.png")
 
 @rt("/vcard")
 def get():
-    content = Div(H2("Carte VCard"), Form(Grid(Input(name="fn", placeholder="Prénom"), Input(name="ln", placeholder="Nom")), Input(name="tel", placeholder="Tel"), Button("Générer"), hx_post="/gen-vcard", hx_target="#o"), Div(id="o"), cls="modern-card")
+    content = Div(
+        H2("Carte de Visite Digitale (VCard)", cls="gradient-text"),
+        P("Générez un QR Code qui enregistre vos coordonnées complètes dans le répertoire de vos clients et partenaires."),
+        
+        Form(
+            # --- BLOC : IDENTITÉ ---
+            Grid(
+                Div(Label("Prénom", Input(name="fn", placeholder="Ex: Jean"))),
+                Div(Label("Nom", Input(name="ln", placeholder="Ex: Dupont")))
+            ),
+            # --- BLOC : PROFESSIONNEL ---
+            Grid(
+                Div(Label("Boutique / Entreprise", Input(name="org", placeholder="Ex: RetailBox SARL"))),
+                Div(Label("Poste / Fonction", Input(name="title", placeholder="Ex: Gérant ou Consultant")))
+            ),
+            # --- BLOC : COORDONNÉES ---
+            Grid(
+                Div(Label("Téléphone", Input(name="tel", type="tel", placeholder="+33 6..."))),
+                Div(Label("E-mail Pro", Input(name="email", type="email", placeholder="contact@pro.com")))
+            ),
+            # --- BLOC : RÉSEAUX & ADRESSE ---
+            Grid(
+                Div(Label("LinkedIn (URL)", Input(name="linkedin", placeholder="linkedin.com/in/profil"))),
+                Div(Label("Site Web / Boutique", Input(name="url", type="url", placeholder="https://...")))
+            ),
+            Label("Adresse physique (pour GPS)", Input(name="adr", placeholder="Ex: 12 rue de la Paix, Paris")),
+
+            Button("🚀 Générer ma Carte Pro", cls="btn-full"),
+            hx_post="/gen-vcard", hx_target="#vcard-out"
+        ),
+        Div(id="vcard-out"),
+        cls="modern-card"
+    )
     return Layout(content, "VCard")
 
 @rt("/gen-vcard", methods=["POST"])
-async def post(fn:str, ln:str, tel:str): return generate_qr_response(f"BEGIN:VCARD\nFN:{fn} {ln}\nTEL:{tel}\nEND:VCARD", "contact.png")
+async def post(fn:str="", ln:str="", org:str="", title:str="", tel:str="", email:str="", url:str="", adr:str="", linkedin:str=""):
+    # Nettoyage simple du lien LinkedIn pour extraire l'identifiant si besoin
+    li_link = linkedin.strip()
+    if "linkedin.com/in/" in li_link:
+        # On s'assure que le lien est bien en https pour la compatibilité
+        if not li_link.startswith("http"): li_link = "https://" + li_link
+    
+    vcard_lines = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        f"FN:{fn} {ln}",
+        f"N:{ln};{fn};;;",
+        f"ORG:{org}",
+        f"TITLE:{title}",
+        f"TEL;TYPE=CELL,VOICE:{tel}",
+        f"EMAIL;TYPE=PREF,INTERNET:{email}",
+        f"URL;TYPE=Website:{url}",
+        f"ADR;TYPE=WORK:;;{adr};;;;",
+    ]
+    
+    if li_link:
+        # Champ standard pour les réseaux sociaux dans les répertoires modernes (iPhone/Android)
+        vcard_lines.append(f"X-SOCIALPROFILE;TYPE=linkedin:{li_link}")
+        # On le remet en NOTE pour être sûr que l'utilisateur le voit s'il n'apparaît pas dans les champs
+        vcard_lines.append(f"NOTE:Profil LinkedIn: {li_link}")
 
+    vcard_lines.append("END:VCARD")
+    vcard_data = "\n".join([line for line in vcard_lines if not line.endswith(":")])
+    
+    return generate_qr_response(vcard_data, "vcard-pro.png")
 @rt("/whatsapp-qr")
 def get():
     content = Div(H2("QR WhatsApp"), Form(Input(name="n", placeholder="Numéro"), Button("Générer"), hx_post="/gen-wa", hx_target="#o"), Div(id="o"), cls="modern-card")
@@ -543,8 +649,6 @@ def get():
 
 @rt("/contact")
 def get():
-    # Remplace par ton ID Formspree réel
-    
     
     # On définit le script pour gérer l'envoi sans redirection
     ajax_script = Script(f"""

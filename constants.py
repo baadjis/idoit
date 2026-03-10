@@ -83,3 +83,12 @@ guide_data = [
         "desc": "Générez un accès sécurisé via notre <a href='/wifi-qr' class='faq-link'>QR Wi-Fi</a>. Vos clients se connectent à votre réseau sans aucune saisie manuelle de mot de passe, simplement en scannant le code."
     }
 ]
+
+
+SOCIAL_NETWORKS = [
+    ("Instagram", "Instagram"), ("TikTok", "TikTok"), ("YouTube", "YouTube"),
+    ("Threads", "Threads"), ("Pinterest", "Pinterest"), ("Twitch", "Twitch"),
+    ("Facebook", "Facebook"), ("LinkedIn", "LinkedIn"), ("X", "X (Twitter)"),
+    ("Spotify", "Spotify"), ("Shopify", "Ma Boutique / Shopify"),
+    ("WhatsApp", "WhatsApp"), ("Website", "Site Web Personnel")
+]
