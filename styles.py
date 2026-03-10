@@ -124,4 +124,42 @@ styles= f"""
         color: var(--pico-color);
         opacity: 0.9;
     }}
+
+
+
+    /* Style spécifique pour les lignes de réseaux sociaux */
+    .social-row {{
+        display: grid;
+        grid-template-columns: 1fr 2.5fr 50px; /* Input 2.5 fois plus large que le select */
+        gap: 12px;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.02); /* Léger fond pour délimiter la ligne */
+        padding: 15px;
+        border-radius: 16px;
+        margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+    }}
+
+    /* Adaptation Mobile (iPhone/Android) */
+    @media (max-width: 768px) {{
+        .social-row {{
+            grid-template-columns: 1fr 50px; /* On passe sur 2 colonnes */
+        }}
+        .social-row select {{ grid-column: 1 / 2; }}
+        .social-row input {{ grid-column: 1 / 2; }}
+        .social-row button {{ 
+            grid-column: 2 / 3; 
+            grid-row: 1 / 3; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }}
+    }}
+
+    /* Style des inputs dans ces lignes */
+    .social-row select, .social-row input {{
+        margin-bottom: 0 !important; /* Enlève la marge par défaut de Pico */
+        border: 1px solid #cbd5e1 !important;
+    }}
 """

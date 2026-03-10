@@ -212,24 +212,25 @@ def get():
     
     return Layout(content, "Accueil")
 # --- OUTILS ---
-
 @rt("/add-social-row")
 def get():
     return Div(
-        # Sélecteur verrouillé sur notre liste SOCIAL_NETWORKS
+        # Sélecteur
         Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
-               name="social_networks", style="flex: 1; min-width: 140px;"),
+               name="social_networks"),
         
-        # Champ pour le lien ou l'identifiant
-        Input(name="social_handles", placeholder="Lien ou @identifiant", style="flex: 2;"),
+        # Champ de valeur (L'input large)
+        Input(name="social_handles", 
+              placeholder="Ex: https://instagram.com/ma-boutique", 
+              required=True),
         
-        # Bouton suppression (Poubelle Lucide)
-        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", 
+        # Bouton suppression stylisé (Rouge discret)
+        Button(Safe('<i data-lucide="trash-2"></i>'), 
+               type="button", 
                onclick="this.parentElement.remove()", 
-               style="width:45px; background:transparent !important; border:none; color:#ef4444; padding:0;"),
+               style="background:#fee2e2 !important; color:#ef4444 !important; border:1px solid #fecaca !important; padding:0;"),
         
-        cls="key-value-row", 
-        style="display:flex; gap:10px; margin-bottom:12px; align-items: center;"
+        cls="social-row"
     )
 
 @rt("/digital-id")
