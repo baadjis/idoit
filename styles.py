@@ -126,40 +126,53 @@ styles= f"""
     }}
 
 
-
-    /* Style spécifique pour les lignes de réseaux sociaux */
+/* Grille des lignes sociales */
     .social-row {{
         display: grid;
-        grid-template-columns: 1fr 2.5fr 50px; /* Input 2.5 fois plus large que le select */
+        grid-template-columns: 1fr 2.5fr 50px;
         gap: 12px;
         align-items: center;
-        background: rgba(0, 0, 0, 0.02); /* Léger fond pour délimiter la ligne */
-        padding: 15px;
+        background: rgba(0, 0, 0, 0.03);
+        padding: 1rem;
         border-radius: 16px;
-        margin-bottom: 15px;
+        margin-bottom: 1rem;
         border: 1px solid #e2e8f0;
     }}
 
-    /* Adaptation Mobile (iPhone/Android) */
-    @media (max-width: 768px) {{
+    /* Style du bouton supprimer */
+    .btn-remove {{
+        background: #fee2e2 !important;
+        color: #ef4444 !important;
+        border: 1px solid #fecaca !important;
+        padding: 0 !important;
+        height: 45px;
+        width: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        transition: 0.2s;
+    }}
+    .btn-remove:hover {{
+        background: #ef4444 !important;
+        color: white !important;
+    }}
+
+    @media (max-width: 600px) {{
         .social-row {{
-            grid-template-columns: 1fr 50px; /* On passe sur 2 colonnes */
+            grid-template-columns: 1fr 50px;
         }}
-        .social-row select {{ grid-column: 1 / 2; }}
-        .social-row input {{ grid-column: 1 / 2; }}
-        .social-row button {{ 
+        .social-row select, .social-row input {{ grid-column: 1 / 2; }}
+        .social-row .btn-remove {{ 
             grid-column: 2 / 3; 
             grid-row: 1 / 3; 
             height: 100%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
         }}
     }}
 
-    /* Style des inputs dans ces lignes */
+    /* Forcer la visibilité des labels et inputs */
     .social-row select, .social-row input {{
-        margin-bottom: 0 !important; /* Enlève la marge par défaut de Pico */
-        border: 1px solid #cbd5e1 !important;
+        margin-bottom: 0 !important;
+        color: #0f172a !important;
     }}
 """

@@ -219,44 +219,47 @@ def get():
         Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
                name="social_networks"),
         
-        # Champ de valeur (L'input large)
+        # Champ de valeur avec validation obligatoire
         Input(name="social_handles", 
-              placeholder="Ex: https://instagram.com/ma-boutique", 
-              required=True),
+              placeholder="Identifiant ou URL (Requis)", 
+              required=True), # EMPECHE LE SUBMIT SI VIDE
         
-        # Bouton suppression stylisé (Rouge discret)
-        Button(Safe('<i data-lucide="trash-2"></i>'), 
+        # Bouton supprimer
+        Button(Safe('<i data-lucide="trash-2" style="width:20px; height:20px;"></i>'), 
                type="button", 
                onclick="this.parentElement.remove()", 
-               style="background:#fee2e2 !important; color:#ef4444 !important; border:1px solid #fecaca !important; padding:0;"),
+               cls="btn-remove"),
         
-        cls="social-row"
+        cls="social-row",
+        # Petit script pour réinitialiser les icônes Lucide sur la nouvelle ligne
+        onload="lucide.createIcons();"
     )
-
 @rt("/digital-id")
 def get():
     content = Div(
         H2("Votre Identité Digitale unique", cls="gradient-text"),
-        P("Instructions : Sélectionnez vos réseaux et saisissez vos identifiants. Nous générons un point d'entrée unique pour toute votre présence en ligne."),
+        P("Sélectionnez vos réseaux et saisissez vos liens. Le formulaire validera vos données avant de générer le code."),
         
         Form(
-            # Le conteneur où les lignes s'ajoutent
+            # 1. LES INPUTS (Toujours en haut)
             Div(id="social-list", hx_get="/add-social-row", hx_trigger="load"),
             
-            # Bouton d'ajout
-            Button("+ Ajouter un réseau social", type="button", 
-                   hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend",
-                   cls="outline secondary", style="width:100%; margin-bottom:20px;"),
+            # 2. LES BOUTONS (Toujours en bas)
+            Div(
+                Button("+ Ajouter un réseau social", type="button", 
+                       hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend",
+                       cls="outline secondary", style="margin-bottom:15px;"),
+                
+                Button("🚀 Générer ma Social Card", type="submit", cls="btn-full"),
+                style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 2rem;"
+            ),
             
-            Button("🚀 Générer ma Social Card", cls="btn-full"),
             hx_post="/gen-id", hx_target="#id-out"
         ),
         Div(id="id-out"),
         cls="modern-card"
     )
     return Layout(content, "Accueil")
-
-
 @rt("/gen-id", methods=["POST"])
 async def post(social_networks: list = None, social_handles: list = None):
     # Sécurité : FastHTML renvoie une string si 1 seul champ, une liste si plusieurs
