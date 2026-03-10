@@ -50,7 +50,12 @@ ga_config = Script("""
 """)
 
 app, rt = fast_app(static_path='public', hdrs=(*meta_tags, Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"), custom_style,
-                                               ga_lib, ga_config, adsense_script, Script(src="https://unpkg.com/lucide@latest")))
+                                               ga_lib, ga_config, adsense_script, Script(src="https://unpkg.com/lucide@latest"),# Dans ton main.py, assure-toi que ce script est présent pour HTMX
+Script("""
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        lucide.createIcons();
+    });
+""")))
 
 
 # --- COMPOSANTS ---
