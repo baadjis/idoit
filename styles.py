@@ -127,52 +127,36 @@ styles= f"""
 
 
 /* Grille des lignes sociales */
-    .social-row {{
+  .social-row {{
         display: grid;
-        grid-template-columns: 1fr 2.5fr 50px;
+        grid-template-columns: 1fr 2fr 50px;
         gap: 12px;
         align-items: center;
-        background: rgba(0, 0, 0, 0.03);
-        padding: 1rem;
+        background: #f8fafc;
+        padding: 1.2rem;
         border-radius: 16px;
         margin-bottom: 1rem;
         border: 1px solid #e2e8f0;
     }}
 
-    /* Style du bouton supprimer */
+    /* Bouton supprimer ultra-visible */
     .btn-remove {{
-        background: #fee2e2 !important;
-        color: #ef4444 !important;
-        border: 1px solid #fecaca !important;
-        padding: 0 !important;
+        background: #ef4444 !important; /* Rouge vif */
+        color: white !important;
+        border: none !important;
         height: 45px;
         width: 45px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 12px;
-        transition: 0.2s;
-    }}
-    .btn-remove:hover {{
-        background: #ef4444 !important;
-        color: white !important;
+        cursor: pointer;
+        padding: 0 !important;
     }}
 
     @media (max-width: 600px) {{
-        .social-row {{
-            grid-template-columns: 1fr 50px;
-        }}
+        .social-row {{grid-template-columns: 1fr 50px; }}
         .social-row select, .social-row input {{ grid-column: 1 / 2; }}
-        .social-row .btn-remove {{ 
-            grid-column: 2 / 3; 
-            grid-row: 1 / 3; 
-            height: 100%; 
-        }}
-    }}
-
-    /* Forcer la visibilité des labels et inputs */
-    .social-row select, .social-row input {{
-        margin-bottom: 0 !important;
-        color: #0f172a !important;
+        .social-row .btn-remove {{ grid-column: 2 / 3; grid-row: 1 / 3; height: 100%; }}
     }}
 """

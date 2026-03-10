@@ -220,70 +220,87 @@ def get():
 @rt("/add-social-row")
 def get():
     return Div(
-        # Sélecteur
         Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
-               name="social_networks"),
+               name="social_networks", onchange="checkDuplicates()"),
         
-        # Champ de valeur avec validation obligatoire
-        Input(name="social_handles", 
-              placeholder="Identifiant ou URL (Requis)", 
-              required=True), # EMPECHE LE SUBMIT SI VIDE
+        Input(name="social_handles", placeholder="Lien ou identifiant @", required=True),
         
-        # Bouton supprimer
         Button(Safe('<i data-lucide="trash-2" style="width:20px; height:20px;"></i>'), 
-               type="button", 
-               onclick="this.parentElement.remove()", 
+               type="button", onclick="this.parentElement.remove(); checkDuplicates();", 
                cls="btn-remove"),
         
-        cls="social-row",
-        # Petit script pour réinitialiser les icônes Lucide sur la nouvelle ligne
-        onload="lucide.createIcons();"
+        cls="social-row"
     )
+
 @rt("/digital-id")
 def get():
+    # Script JavaScript pour gérer les doublons et les icônes
+    js_logic = Script("""
+        function checkDuplicates() {
+            const selects = document.querySelectorAll('select[name="social_networks"]');
+            const selectedValues = Array.from(selects).map(s => s.value);
+            
+            selects.forEach(select => {
+                const options = select.options;
+                for (let i = 0; i < options.length; i++) {
+                    const isSelectedElsewhere = selectedValues.filter(v => v === options[i].value).length > 1;
+                    if (isSelectedElsewhere && options[i].value !== select.value) {
+                        options[i].disabled = true;
+                    } else {
+                        options[i].disabled = false;
+                    }
+                }
+            });
+            if (window.lucide) lucide.createIcons();
+        }
+        // Exécuter au chargement
+        document.body.addEventListener('htmx:afterSwap', checkDuplicates);
+    """)
+
     content = Div(
-        H2("Votre Identité Digitale unique", cls="gradient-text"),
-        P("Sélectionnez vos réseaux et saisissez vos liens. Le formulaire validera vos données avant de générer le code."),
+        H2("Votre Identité Digitale", cls="gradient-text"),
+        P("Ajoutez vos réseaux sociaux. Notre système empêche les doublons pour garantir un QR Code propre."),
         
         Form(
-            # 1. LES INPUTS (Toujours en haut)
+            # 1. ZONE DES INPUTS (Toujours en haut)
             Div(id="social-list", hx_get="/add-social-row", hx_trigger="load"),
             
-            # 2. LES BOUTONS (Toujours en bas)
+            # 2. ZONE DES ACTIONS (Séparée et en bas)
             Div(
-                Button("+ Ajouter un réseau social", type="button", 
+                Button("+ Ajouter un réseau", type="button", 
                        hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend",
-                       cls="outline secondary", style="margin-bottom:15px;"),
+                       cls="outline secondary", style="margin-bottom:1rem;"),
                 
-                Button("🚀 Générer ma Social Card", type="submit", cls="btn-full"),
-                style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 2rem;"
+                Button("🚀 Générer mon Identité Digitale", type="submit", cls="btn-full"),
+                
+                style="margin-top: 2rem; border-top: 2px solid #f1f5f9; padding-top: 2rem;"
             ),
             
             hx_post="/gen-id", hx_target="#id-out"
         ),
         Div(id="id-out"),
+        js_logic,
         cls="modern-card"
     )
     return Layout(content, "Accueil")
+
 @rt("/gen-id", methods=["POST"])
 async def post(social_networks: list = None, social_handles: list = None):
-    # Sécurité : FastHTML renvoie une string si 1 seul champ, une liste si plusieurs
     nets = [social_networks] if isinstance(social_networks, str) else (social_networks or [])
     hands = [social_handles] if isinstance(social_handles, str) else (social_handles or [])
     
-    # Construction propre du texte
     data_lines = ["MA PRÉSENCE DIGITALE :"]
+    seen_networks = set() # Pour doubler la sécurité côté serveur
+
     for n, h in zip(nets, hands):
-        if h.strip():
+        if h.strip() and n not in seen_networks:
             data_lines.append(f"• {n}: {h.strip()}")
+            seen_networks.add(n)
     
     if len(data_lines) <= 1:
-        return P("Veuillez ajouter au moins un réseau social.", style="color:red; font-weight:bold;")
+        return P("Veuillez remplir au moins un réseau.", style="color:red; font-weight:bold;")
 
-    final_content = "\n".join(data_lines)
-    
-    # Appel de ta fonction stable définie précédemment
-    return generate_qr_response(final_content, "identity-retailbox.png")
+    return generate_qr_response("\n".join(data_lines), "identite-digitale.png")
 
 @rt("/vcard")
 def get():
