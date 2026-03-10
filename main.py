@@ -217,8 +217,9 @@ def get():
     
     return Layout(content, "Accueil")
 # --- OUTILS ---
-
+#social row
 def SocialRow():
+
     return Div(
         # 1. Sélection du réseau
         Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
