@@ -220,9 +220,21 @@ def get():
 
 def SocialRow():
     return Div(
-        Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], name="social_networks", onchange="checkDuplicates()"),
-        Input(name="social_handles", placeholder="Lien ou @identifiant", required=True),
-        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", onclick="this.parentElement.remove(); checkDuplicates();", cls="btn-remove-final"),
+        # 1. Sélection du réseau
+        Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
+               name="social_networks", onchange="checkDuplicates()"),
+        
+        # 2. Saisie de l'identifiant
+        Input(name="social_handles", placeholder="Lien URL ou @identifiant", required=True),
+        
+        # 3. Bouton supprimer en bas (Full Width)
+        Button(
+            Safe('<i data-lucide="trash-2" style="width:18px"></i> Supprimer ce réseau'), 
+            type="button", 
+            onclick="this.parentElement.remove(); checkDuplicates();", 
+            cls="btn-remove-final"
+        ),
+        
         cls="social-row"
     )
 

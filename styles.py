@@ -139,24 +139,50 @@ styles= f"""
         border: 1px solid #e2e8f0;
     }}
     /* BOUTON SUPPRIMER ROUGE FIXE */
+   /* Bloc conteneur de chaque réseau social */
+    .social-row {{
+        display: flex;
+        flex-direction: column; /* Empile les éléments verticalement */
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.03);
+        padding: 1.2rem;
+        border-radius: 18px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }}
+
+    /* Bouton SUPPRIMER : Rouge Fixe, Largeur Totale, Sans traits */
     .btn-remove-final {{
-        background-color: #ef4444 !important;
-        color: white !important;
+        background-color: #ef4444 !important; /* Rouge pur AdSense compatible */
+        color: #ffffff !important;
         border: none !important;
-        width: 45px !important;
-        height: 45px !important;
+        width: 100% !important; /* Toute la largeur */
+        height: 48px !important;
         display: flex !important;
         align-items: center;
         justify-content: center;
+        gap: 8px;
         border-radius: 12px !important;
-        padding: 0 !important;
+        cursor: pointer;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+        box-shadow: none !important;
     }}
 
+    .btn-remove-final:hover {{
+        background-color: #dc2626 !important; /* Rouge plus sombre au survol */
+    }}
 
-    @media (max-width: 600px) {{
-        .social-row {{ grid-template-columns: 1fr 50px; }}
-        .social-row select, .social-row input {{ grid-column: 1 / 2; }}
-        .social-row .btn-remove-final {{ grid-column: 2 / 3; grid-row: 1 / 3; height: 100% !important; }}
+    /* Forcer la visibilité des inputs dans le bloc */
+    .social-row select, .social-row input {{
+        margin-bottom: 0 !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+    }}
+
+    @media (prefers-color-scheme: dark) {{
+        .social-row {{ background: rgba(255, 255, 255, 0.05); border-color: #334155; }}
     }}
 
 """
