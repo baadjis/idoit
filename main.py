@@ -13,6 +13,11 @@ import os
 from constants import SOCIAL_NETWORKS, services,faq_data,adsense_script_src,ga_lib_src,guide_data
 from styles import styles
 
+#reportlab
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
+
 load_dotenv() 
 os.environ['U2NET_HOME'] = '/tmp'
 FORMSPREE_ID = os.environ.get("FORMSPREE_ID", "TON_ID_DE_TEST")
@@ -373,28 +378,131 @@ def get():
 @rt("/gen-wa", methods=["POST"])
 async def post(n:str): return generate_qr_response(f"https://wa.me/{n}", "wa.png")
 
+
+#soldes 
+def generate_pdf_sheet(label_pil_img):
+    """
+    Prend une image d'étiquette et crée un PDF A4 avec 24 étiquettes (3x8).
+    """
+    buffer = BytesIO()
+    # Création du canvas ReportLab (A4 : 210mm x 297mm)
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # Dimensions d'une étiquette sur le PDF (environ 70mm x 37mm)
+    label_w = 65 * mm
+    label_h = 35 * mm
+    
+    # Marges et espacements
+    margin_x = 7 * mm
+    margin_y = 15 * mm
+    gap_x = 2 * mm
+    gap_y = 0 * mm
+
+    # On transforme l'image PIL en format lisible par ReportLab
+    img_byte_arr = BytesIO()
+    label_pil_img.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    from reportlab.lib.utils import ImageReader
+    img_reader = ImageReader(img_byte_arr)
+
+    # Boucle pour placer les 24 étiquettes (3 colonnes x 8 lignes)
+    for row in range(8):
+        for col in range(3):
+            x = margin_x + col * (label_w + gap_x)
+            y = height - (margin_y + (row + 1) * label_h) # ReportLab commence en bas
+            c.drawImage(img_reader, x, y, width=label_w, height=label_h)
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return buffer
+
 @rt("/soldes")
 def get():
-    content = Div(H2("Étiquettes Soldes"), Form(Input(name="item", placeholder="Produit"), Grid(Input(name="old_p", placeholder="Ancien Prix"), Input(name="new_p", placeholder="Prix Soldé")), Input(name="code", placeholder="Barcode EAN"), Button("Créer"), hx_post="/gen-soldes", hx_target="#o"), Div(id="o"), cls="modern-card")
-    return Layout(content, "Soldes")
+    content = Div(
+        H2("Générateur d'Étiquettes & Planches A4", cls="gradient-text"),
+        P("""Créez vos étiquettes de soldes avec prix barrés. 
+          Le système génère une image haute définition et une planche PDF A4 (24 étiquettes) 
+          prête pour vos planches d'autocollants standards."""),
+        
+        Form(
+            Label("Nom du produit / Référence", 
+                  Input(name="item", placeholder="Ex: Chemise Lin Bleu", required=True)),
+            
+            Grid(
+                Div(Label("Prix d'origine (€)", Input(name="old_p", placeholder="Ex: 59", type="number", step="0.01"))),
+                Div(Label("Prix soldé (€)", Input(name="new_p", placeholder="Ex: 39", type="number", step="0.01")))
+            ),
+            
+            Label("Code-barres EAN-13 (12 chiffres)", 
+                  Input(name="code", placeholder="Ex: 366123456789", required=True)),
+            
+            Button("🚀 Créer l'image et la Planche PDF", type="submit", cls="btn-full"),
+            
+            hx_post="/gen-soldes", 
+            hx_target="#soldes-result",
+            hx_indicator="#loading-soldes"
+        ),
+        
+        # Indicateur de chargement car la génération PDF prend 1 seconde
+        Div(id="loading-soldes", cls="htmx-indicator", aria_busy="true", style="text-align:center; margin-top:1rem;"),
+        
+        # Zone de résultat
+        Div(id="soldes-result"),
+        
+        cls="modern-card"
+    )
+    return Layout(content, "Accueil") # On garde "Accueil" car c'est un service de la grille
 
 @rt("/gen-soldes", methods=["POST"])
 async def post(item:str, old_p:str, new_p:str, code:str):
     try:
-        bc_class = barcode.get_barcode_class('ean13'); buf_bc = BytesIO(); bc_class(code, writer=ImageWriter()).write(buf_bc)
-        tag = Image.new('RGB', (400, 400), color='white'); d = ImageDraw.Draw(tag)
-        d.text((20, 20), f"{item}", fill="black"); d.text((20, 60), f"{old_p}€", fill="red"); d.text((20, 100), f"{new_p}€", fill="black")
-        buf_f = BytesIO(); tag.save(buf_f, format="PNG"); s = base64.b64encode(buf_f.getvalue()).decode()
-        return Div(Img(src=f"data:image/png;base64,{s}"), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="tag.png"))
-    except: return P("Erreur code", style="color:red")
+        # --- 1. GÉNÉRATION DE L'IMAGE DE BASE (Ton code actuel) ---
+        bc_class = barcode.get_barcode_class('ean13')
+        buf_bc = BytesIO()
+        bc_class(code, writer=ImageWriter()).write(buf_bc)
+        bc_img = Image.open(buf_bc).resize((300, 150))
+        
+        tag = Image.new('RGB', (400, 400), color='white')
+        d = ImageDraw.Draw(tag)
+        d.text((20, 20), f"{item}", fill="black")
+        d.text((20, 60), f"{old_p}€", fill="red")
+        d.line((15, 75, 100, 75), fill="red", width=3)
+        d.text((20, 100), f"{new_p}€", fill="black")
+        tag.paste(bc_img, (50, 200))
+
+        # --- 2. CRÉATION DU PDF (Le mode Planche) ---
+        pdf_buffer = generate_pdf_sheet(tag)
+        pdf_base64 = base64.b64encode(pdf_buffer.read()).decode()
+
+        # --- 3. RENDU HTML ---
+        buf_f = BytesIO()
+        tag.save(buf_f, format="PNG")
+        img_s = base64.b64encode(buf_f.getvalue()).decode()
+        
+        return Div(
+            H4("Aperçu de l'étiquette :"),
+            Img(src=f"data:image/png;base64,{img_s}", style="max-width:200px; border:1px solid #ccc;"),
+            Grid(
+                A(Button("⬇️ Télécharger l'image seule", cls="outline"), 
+                  href=f"data:image/png;base64,{img_s}", download="etiquette.png"),
+                
+                A(Button("📄 Télécharger Planche A4 (24 PDF)", cls="btn-full"), 
+                  href=f"data:application/pdf;base64,{pdf_base64}", download="planche-etiquettes.pdf")
+            ),
+            style="text-align:center; padding:1rem;"
+        )
+    except:
+        return P("Erreur : Vérifiez que le code a 12 chiffres.", style="color:red")
 
 def DataRow(prefix):
     return Div(
-        Input(name=f"{prefix}_keys", placeholder="Clé (ex: SKU)"),
-        Input(name=f"{prefix}_vals", placeholder="Valeur"),
+        Input(name=f"{prefix}_keys", placeholder="Clé (ex: SKU)", maxlength="15"),
+        Input(name=f"{prefix}_vals", placeholder="Valeur", maxlength="30", required=True),
         Button(Safe('<i data-lucide="trash-2"></i>'), type="button", 
-               onclick="this.parentElement.remove()", 
-               style="width:40px; background:transparent !important; border:none; color:red;"),
+               onclick="this.parentElement.remove(); checkDuplicates();", 
+               style="width:40px; background:transparent !important; border:none; color:#ef4444;"),
         cls="key-value-row", 
         style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-top:10px;"
     )
@@ -428,18 +536,27 @@ def get():
 def get(t:str):
     if t == "ean13":
         return Div(
-            Input(name="d", placeholder="Entrez 12 chiffres", required=True),
-            P("Le 13ème chiffre de contrôle est calculé automatiquement.", style="font-size:0.8rem; opacity:0.7;")
+            Input(name="d", 
+                  placeholder="Entrez 12 chiffres", 
+                  required=True,
+                  maxlength="12",        # Limite physique à 12 caractères
+                  minlength="12",        # Oblige à avoir 12 caractères
+                  pattern="[0-9]{12}",   # Force uniquement des chiffres
+                  title="Veuillez entrer exactement 12 chiffres numériques",
+                  # Petit hack JS pour empêcher de taper autre chose que des chiffres
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '');"),
+            P("Le 13ème chiffre de contrôle sera calculé automatiquement.", 
+              style="font-size:0.8rem; opacity:0.7; margin-top:5px;")
         )
+    
     # Mode Key-Value pour Code 128
     return Div(
         Div(DataRow("bc"), id="bc-kv-list"),
-        Button("+ Ajouter une ligne", type="button", 
+        Button("+ Ajouter une donnée", type="button", 
                hx_get="/add-bc-row", hx_target="#bc-kv-list", hx_swap="beforeend",
                cls="outline secondary", style="width:100%; margin-top:10px;"),
         id="bc-kv-container"
     )
-
 @rt("/add-bc-row")
 def get(): return DataRow("bc")
 
@@ -450,15 +567,23 @@ async def post(t:str, d:str=None, bc_keys:list=None, bc_vals:list=None):
         final_data = ""
         if t == "ean13":
             final_data = d.strip()
-            if len(final_data) != 12: return P("Erreur : EAN-13 nécessite 12 chiffres.", style="color:red; font-weight:bold;")
+            # Validation stricte côté serveur
+            if not final_data.isdigit() or len(final_data) != 12:
+                return P("Erreur : EAN-13 nécessite exactement 12 chiffres.", 
+                         style="color:red; font-weight:bold; border:1px solid red; padding:10px; border-radius:10px;")
         else:
-            # Code 128 : On assemble les clés et valeurs
-            keys = [bc_keys] if isinstance(bc_keys, str) else bc_keys
-            vals = [bc_vals] if isinstance(bc_vals, str) else bc_vals
-            # On filtre les lignes vides
+            # Code 128
+            keys = [bc_keys] if isinstance(bc_keys, str) else (bc_keys or [])
+            vals = [bc_vals] if isinstance(bc_vals, str) else (bc_vals or [])
             pairs = [f"{k}:{v}" for k, v in zip(keys, vals) if k and k.strip()]
             final_data = " ".join(pairs)
-            if not final_data: return P("Erreur : Veuillez saisir au moins une donnée.", style="color:red;")
+            
+            if not final_data: 
+                return P("Erreur : Veuillez saisir au moins une donnée.", style="color:red;")
+            
+            # Limite de sécurité pour la lisibilité du Code 128
+            if len(final_data) > 60:
+                return P("Erreur : Trop de données. Le code-barres serait illisible.", style="color:red;")
 
         # Génération
         bc_class = barcode.get_barcode_class(t)
@@ -469,11 +594,11 @@ async def post(t:str, d:str=None, bc_keys:list=None, bc_vals:list=None):
         return Div(
             Img(src=f"data:image/png;base64,{s}", style="max-width:100%; border:1px solid #e2e8f0; border-radius:10px;"),
             P(f"Données encodées : {final_data}", style="font-size:0.8rem; margin-top:0.5rem; font-family:monospace;"),
-            A(Button("⬇️ Télécharger le Barcode", cls="btn-full"), href=f"data:image/png;base64,{s}", download="barcode.png"),
+            A(Button("⬇️ Télécharger Barcode", cls="btn-full"), href=f"data:image/png;base64,{s}", download="barcode-retailbox.png"),
             style="text-align:center; padding-top:1.5rem;"
         )
     except Exception as e:
-        return P(f"Erreur technique : {str(e)}", style="color:red; font-weight:bold;")
+        return P(f"Erreur de format : {str(e)}", style="color:red; font-weight:bold;")
     
 @rt("/rembg-tab")
 def get():
