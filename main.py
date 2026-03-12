@@ -1,3 +1,7 @@
+import random
+import sqlite3
+import string
+
 from dotenv import load_dotenv
 from fasthtml.common import *
 from starlette.responses import PlainTextResponse
@@ -11,6 +15,7 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import os
 from constants import SOCIAL_NETWORKS, services,faq_data,adsense_script_src,ga_lib_src,guide_data
+from db import init_db
 from styles import styles
 
 #reportlab
@@ -19,6 +24,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 
 load_dotenv() 
+init_db()
 os.environ['U2NET_HOME'] = '/tmp'
 FORMSPREE_ID = os.environ.get("FORMSPREE_ID", "TON_ID_DE_TEST")
 
@@ -733,6 +739,64 @@ async def post(qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=None, qr_
 def get():
     content = Div(H2("QR Wi-Fi"), Form(Input(name="s", placeholder="SSID"), Button("Générer"), hx_post="/gen-wifi", hx_target="#o"), Div(id="o"), cls="modern-card")
     return Layout(content, "Accueil")
+
+
+@rt("/shortener")
+def get():
+    content = Div(
+        H2("Réducteur de liens RetailLink", cls="gradient-text"),
+        P("Transformez vos longues URLs de boutiques en liens courts et suivez vos performances."),
+        
+        Form(
+            Input(name="url", placeholder="Collez votre lien ici (ex: https://shopify.com/mon-produit-tres-long)", required=True),
+            Button("🚀 Réduire le lien", cls="btn-full"),
+            hx_post="/gen-short", hx_target="#o"
+        ),
+        Div(id="o"),
+        cls="modern-card"
+    )
+    return Layout(content, "Accueil")
+
+@rt("/gen-short", methods=["POST"])
+async def post(url: str, request):
+    # Générer un code de 6 caractères aléatoires
+    code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+    
+    conn = sqlite3.connect('links.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO links (short_code, long_url) VALUES (?, ?)", (code, url))
+    conn.commit()
+    conn.close()
+    
+    # On récupère l'adresse de base de ton site
+    base_url = str(request.base_url)
+    short_link = f"{base_url}s/{code}"
+    
+    return Div(
+        H4("Votre lien court est prêt :"),
+        Input(value=short_link, readonly=True, style="text-align:center; font-weight:bold; color:var(--primary);"),
+        P("Partagez ce lien sur vos réseaux sociaux ou dans vos QR Codes pour suivre les clics."),
+        style="text-align:center; margin-top:2rem; padding:1.5rem; background:rgba(0,0,0,0.02); border-radius:20px;"
+    )
+
+
+@rt("/s/{code}")
+def get(code: str):
+    conn = sqlite3.connect('links.db')
+    c = conn.cursor()
+    # On cherche l'URL longue et on incrémente le compteur de clics
+    c.execute("SELECT long_url FROM links WHERE short_code = ?", (code,))
+    res = c.fetchone()
+    
+    if res:
+        c.execute("UPDATE links SET clicks = clicks + 1 WHERE short_code = ?", (code,))
+        conn.commit()
+        conn.close()
+        # Redirection magique
+        return RedirectResponse(res[0])
+    
+    conn.close()
+    return P("Lien non trouvé ou expiré.")
 
 # --- PAGES LEGALES ---
 @rt("/ads.txt")

@@ -15,6 +15,7 @@ services = [
     ("message-circle", "QR WhatsApp", "Générez un lien QR direct pour ouvrir instantanément une discussion WhatsApp avec vos clients.", "/whatsapp-qr"),
     ("image", "RemBg IA", "Supprimez automatiquement le fond de vos photos produits pour vos fiches Shopify, Vinted ou eBay.", "/rembg-tab"),
     ("wifi", "Accès Wi-Fi", " Creez un qrcode pour offrire une connexion Wi-Fi sécurisée à vos clients sans saisie de mot de passe via un simple scan.", "/wifi-qr"),
+    ("link", "Shortener Pro", "Réduisez vos liens et suivez le nombre de clics en temps réel.", "/shortener")
 ]
 
 # faq data 
@@ -46,7 +47,11 @@ faq_data = [
     {
         "q": "Quels formats de codes-barres sont disponibles pour mon stock ?",
         "a": "Nous supportons le format EAN-13 pour la vente et le format Code 128 pour l'inventaire interne. Gérez vos produits avec notre <a href='/barcode-tab' class='faq-link'>Générateur de Barcode</a>."
-    }
+    },
+    {
+        "q": "Pourquoi utiliser un réducteur de lien pour mon commerce ?",
+        "a": "Utilisez notre outil <a href='/shortener' class='faq-link'>Shortener Pro</a> pour transformer des URLs complexes en liens courts et mémorisables. Cela permet d'épurer vos supports de communication (flyers, affiches) et de rendre vos liens de boutique plus cliquables sur les réseaux sociaux."
+    },
 ]
 
 guide_data = [
@@ -81,7 +86,11 @@ guide_data = [
     {
         "icon": "wifi", "title": "QR Code Accès Wi-Fi", "link": "/wifi-qr",
         "desc": "Générez un accès sécurisé via notre <a href='/wifi-qr' class='faq-link'>QR Wi-Fi</a>. Vos clients se connectent à votre réseau sans aucune saisie manuelle de mot de passe, simplement en scannant le code."
-    }
+    },
+    {
+        "icon": "link", "title": "Réducteur de Liens Pro", "link": "/shortener",
+        "desc": "Optimisez vos communications digitales : transformez vos longues URLs de boutique Shopify ou Amazon en liens courts via notre service <a href='/shortener' class='faq-link'>RetailLink</a>. C'est l'outil parfait pour vos bios Instagram ou vos étiquettes de produits."
+    },
 ]
 
 
