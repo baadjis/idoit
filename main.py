@@ -39,7 +39,7 @@ meta_tags = (
     Meta(property="og:title", content="RetailBox | Votre Identité Digitale & Outils Commerce"),
     Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
     Meta(name="color-scheme", content="light"),
-    Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png"),
+    Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png?v=2"),
     Meta(property="og:image:width", content="1200"),
     Meta(property="og:image:height", content="630"),
     Meta(property="og:url", content="https://baadjis-utilitybox.hf.space"),
