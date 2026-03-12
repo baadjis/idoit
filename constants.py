@@ -13,9 +13,9 @@ services = [
     ("barcode", "Barcode Expert", "Générez des codes-barres EAN-13 et Code 128 professionnels pour la gestion de vos stocks et inventaires.", "/barcode-tab"),
     ("contact", "VCard Contact", "Créez un QR Code de contact pour permettre à vos clients d'enregistrer votre fiche d'un seul scan.", "/vcard"),
     ("message-circle", "QR WhatsApp", "Générez un lien QR direct pour ouvrir instantanément une discussion WhatsApp avec vos clients.", "/whatsapp-qr"),
-    ("image", "RemBg IA", "Supprimez automatiquement le fond de vos photos produits pour vos fiches Shopify, Vinted ou eBay.", "/rembg-tab"),
+    ("image", "RemBg IA", "Supprimez automatiquement le fond de vos photos produits pour vos fiches de vente en ligne WordpressShopify, Vinted ou eBay.", "/rembg-tab"),
     ("wifi", "Accès Wi-Fi", " Creez un qrcode pour offrire une connexion Wi-Fi sécurisée à vos clients sans saisie de mot de passe via un simple scan.", "/wifi-qr"),
-    ("link", "Shortener Pro", "Réduisez vos liens et suivez le nombre de clics en temps réel.", "/shortener")
+    ("link", "Url Shortener Pro", "Créez des racourcis d'URL  et suivez le nombre de clics en temps réel.", "/shortener")
 ]
 
 # faq data 
