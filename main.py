@@ -1074,6 +1074,7 @@ def get():
     )
     return Layout(content, "Guide")
 if __name__ == "__main__":
+    #main
     import uvicorn
    
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 7860)))
