@@ -42,7 +42,7 @@ meta_tags = (
     Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png"),
     Meta(property="og:image:width", content="1200"),
     Meta(property="og:image:height", content="630"),
-    Meta(name="twitter:card", content="summary_large_image"),
+
     Meta(property="og:url", content="https://baadjis-utilitybox.hf.space"),
     Meta(property="og:type", content="website"),
     Meta(name="twitter:card", content="summary_large_image")
