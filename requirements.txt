@@ -1,7 +1,8 @@
 python-fasthtml
 qrcode
 python-barcode
-rembg
+rembg[cpu]
+onnxruntime
 pillow
 uvicorn
 starlette
