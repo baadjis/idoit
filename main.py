@@ -26,11 +26,17 @@ from supabase import create_client, Client
 import os
 
 # Ces valeurs sont lues depuis les secrets Hugging Face
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY") # Ici ce sera ta clé service_role
 
-if url and key:
-    supabase: Client = create_client(url, key)
+from supabase import create_client, Client
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+supabase = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except:
+        print("Erreur d'initialisation Supabase")
 
 load_dotenv() 
 #init_db()
@@ -769,6 +775,8 @@ def get():
 
 @rt("/gen-short", methods=["POST"])
 async def post(url: str, request):
+    if not supabase: return P("Service temporairement indisponible (DB)")
+    
     code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
     
     # Insertion dans Supabase
