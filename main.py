@@ -776,7 +776,7 @@ def get():
 @rt("/gen-short", methods=["POST"])
 async def post(url: str, request):
     if not supabase: return P("Service temporairement indisponible (DB)")
-    
+
     code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
     
     # Insertion dans Supabase
@@ -796,6 +796,7 @@ async def post(url: str, request):
 @rt("/s/{code}")
 def get(code: str):
     # Récupérer l'URL
+    if not supabase: return RedirectResponse("/")
     res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
     if res.data:
         long_url = res.data[0]['long_url']
@@ -808,6 +809,7 @@ def get(code: str):
 
 @rt("/stats/{code}")
 def get(code: str):
+    if not supabase: return RedirectResponse("/")
     res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
     if res.data:
         content = Div(
