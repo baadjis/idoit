@@ -33,19 +33,29 @@ adsense_script = Script(
 
 
 # --- SEO & META TAGS ---
+# --- SEO & META TAGS ---
 meta_tags = (
-    Meta(name="description", content="RetailBox - Identité digitale, étiquettes de soldes prix barré, QR Codes menu restaurant et codes-barres EAN13 gratuits."),
-    Meta(name="keywords", content="Identité digitale QR, QR Code menu restaurant PDF, étiquettes soldes, créer barcode ean13, détourage photo produit"),
-    Meta(property="og:title", content="RetailBox | Votre Identité Digitale & Outils Commerce"),
-    Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
-    Meta(name="color-scheme", content="light"),
-    Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png?v=2"),
+    Meta(name="description", content="RetailBox - Outils pro gratuits : Générez vos QR Codes HD, Barcodes EAN13, Étiquettes de Soldes et détourage photo IA en un clic."),
+    Meta(name="keywords", content="Générer QR Code gratuit, Barcode EAN13, Étiquettes soldes prix barré, Rembg IA, RetailBox"),
+    
+    # BALISES OPEN GRAPH (FACEBOOK / WHATSAPP / LINKEDIN)
+    Meta(property="og:title", content="RetailBox | Vos Outils Pro 100% Gratuits"),
+    Meta(property="og:description", content="Générez vos codes-barres, QR codes de menu et transformez vos photos produits instantanément avec nos outils IA."),
+    Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png?v=3"), # On incrémente la version
+    Meta(property="og:image:type", content="image/png"),
     Meta(property="og:image:width", content="1200"),
     Meta(property="og:image:height", content="630"),
     Meta(property="og:url", content="https://baadjis-utilitybox.hf.space"),
     Meta(property="og:type", content="website"),
-    Meta(name="twitter:card", content="summary_large_image")
-   
+    Meta(property="og:site_name", content="RetailBox"),
+    
+    # BALISE TWITTER / X
+    Meta(name="twitter:card", content="summary_large_image"),
+    Meta(name="twitter:title", content="RetailBox | Outils Commerce Gratuits"),
+    Meta(name="twitter:description", content="L'outil indispensable pour les retailers et entrepreneurs."),
+    
+    Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
+    Meta(name="color-scheme", content="light")
 )
 
 # --- STYLE STABILISÉ & TYPOGRAPHIE ---
