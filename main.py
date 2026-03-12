@@ -22,9 +22,19 @@ from styles import styles
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from supabase import create_client, Client
+import os
+
+# Ces valeurs sont lues depuis les secrets Hugging Face
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY") # Ici ce sera ta clé service_role
+
+if url and key:
+    supabase: Client = create_client(url, key)
 
 load_dotenv() 
-init_db()
+#init_db()
+
 os.environ['U2NET_HOME'] = '/tmp'
 FORMSPREE_ID = os.environ.get("FORMSPREE_ID", "TON_ID_DE_TEST")
 
@@ -759,44 +769,45 @@ def get():
 
 @rt("/gen-short", methods=["POST"])
 async def post(url: str, request):
-    # Générer un code de 6 caractères aléatoires
     code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
     
-    conn = sqlite3.connect('links.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO links (short_code, long_url) VALUES (?, ?)", (code, url))
-    conn.commit()
-    conn.close()
+    # Insertion dans Supabase
+    supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
     
-    # On récupère l'adresse de base de ton site
     base_url = str(request.base_url)
+    # Si Hugging Face masque l'URL, on peut forcer ton domaine hf.space ici
     short_link = f"{base_url}s/{code}"
     
     return Div(
-        H4("Votre lien court est prêt :"),
-        Input(value=short_link, readonly=True, style="text-align:center; font-weight:bold; color:var(--primary);"),
-        P("Partagez ce lien sur vos réseaux sociaux ou dans vos QR Codes pour suivre les clics."),
-        style="text-align:center; margin-top:2rem; padding:1.5rem; background:rgba(0,0,0,0.02); border-radius:20px;"
+        H4("Votre lien permanent est prêt :"),
+        Input(value=short_link, readonly=True, style="text-align:center; font-weight:bold;"),
+        A(Button("📊 Voir les stats", cls="outline"), href=f"/stats/{code}"),
+        style="text-align:center; margin-top:2rem;"
     )
-
 
 @rt("/s/{code}")
 def get(code: str):
-    conn = sqlite3.connect('links.db')
-    c = conn.cursor()
-    # On cherche l'URL longue et on incrémente le compteur de clics
-    c.execute("SELECT long_url FROM links WHERE short_code = ?", (code,))
-    res = c.fetchone()
-    
-    if res:
-        c.execute("UPDATE links SET clicks = clicks + 1 WHERE short_code = ?", (code,))
-        conn.commit()
-        conn.close()
-        # Redirection magique
-        return RedirectResponse(res[0])
-    
-    conn.close()
-    return P("Lien non trouvé ou expiré.")
+    # Récupérer l'URL
+    res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
+    if res.data:
+        long_url = res.data[0]['long_url']
+        new_clicks = res.data[0]['clicks'] + 1
+        # Update du compteur en arrière-plan
+        supabase.table("links").update({"clicks": new_clicks}).eq("short_code", code).execute()
+        return RedirectResponse(long_url)
+    return P("Lien non trouvé.")
+
+
+@rt("/stats/{code}")
+def get(code: str):
+    res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
+    if res.data:
+        content = Div(
+            H2(f"Stats pour {code}"),
+            Card(H3(f"{res.data[0]['clicks']} clics"), P(f"Vers : {res.data[0]['long_url']}")),
+            cls="modern-card"
+        )
+        return Layout(content, "Stats")
 
 # --- PAGES LEGALES ---
 @rt("/ads.txt")
