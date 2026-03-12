@@ -7,14 +7,14 @@ ga_lib_src="https://www.googletagmanager.com/gtag/js?id=G-YV2LEDEMR8"
 
 # --- TA LISTE DE SERVICES (SOURCE DE VÉRITÉ) ---
 services = [
-    ("users", "Identité Digitale", "Un seul QR pour regrouper Facebook, Instagram, TikTok, Spotify et plus.", "/digital-id"),
-    ("qr-code", "QR Code Pro", "Lien personnalisé avec logo. Idéal pour menus restaurant PDF ou sites web.", "/qr-tab"),
-    ("tag", "Étiquettes Soldes", "Prix barré + Barcode. Générez vos étiquettes promos prêtes à imprimer.", "/soldes"),
-    ("barcode", "Barcode Expert", "Codes EAN-13 et Code 128 pro pour la gestion de vos stocks.", "/barcode-tab"),
-    ("contact", "VCard Contact", "QR Code de contact. Vos clients enregistrent votre fiche d'un seul scan.", "/vcard"),
-    ("message-circle", "QR WhatsApp", "Ouvrez une discussion directe avec vos clients via un lien QR.", "/whatsapp-qr"),
-    ("image", "RemBg IA", "Suppression de fond par IA pour vos photos produits (Shopify, Vinted).", "/rembg-tab"),
-    ("wifi", "Accès Wi-Fi", "Connexion automatique sécurisée pour vos clients sans mot de passe.", "/wifi-qr"),
+    ("users", "Identité Digitale", "Regroupez vos réseaux sociaux (Facebook, Instagram, TikTok, Spotify) dans un seul QR Code unique.", "/digital-id"),
+    ("qr-code", "QR Code Pro", "Générez un QR Code simple ou  personnalisé avec votre logo pour vos menus restaurant PDF ou vos sites web.", "/qr-tab"),
+    ("tag", "Étiquettes Soldes", "Créez vos étiquettes de soldes avec prix barré et code-barres prêtes pour l'impression en magasin.", "/soldes"),
+    ("barcode", "Barcode Expert", "Générez des codes-barres EAN-13 et Code 128 professionnels pour la gestion de vos stocks et inventaires.", "/barcode-tab"),
+    ("contact", "VCard Contact", "Créez un QR Code de contact pour permettre à vos clients d'enregistrer votre fiche d'un seul scan.", "/vcard"),
+    ("message-circle", "QR WhatsApp", "Générez un lien QR direct pour ouvrir instantanément une discussion WhatsApp avec vos clients.", "/whatsapp-qr"),
+    ("image", "RemBg IA", "Supprimez automatiquement le fond de vos photos produits pour vos fiches Shopify, Vinted ou eBay.", "/rembg-tab"),
+    ("wifi", "Accès Wi-Fi", " Creez un qrcode pour offrire une connexion Wi-Fi sécurisée à vos clients sans saisie de mot de passe via un simple scan.", "/wifi-qr"),
 ]
 
 # faq data 
