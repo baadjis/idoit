@@ -15,7 +15,7 @@ services = [
     ("message-circle", "QR WhatsApp", "Générez un lien QR direct pour ouvrir instantanément une discussion WhatsApp avec vos clients.", "/whatsapp-qr"),
     ("image", "RemBg IA", "Supprimez automatiquement le fond de vos photos produits pour vos fiches de vente en ligne WordpressShopify, Vinted ou eBay.", "/rembg-tab"),
     ("wifi", "Accès Wi-Fi", " Creez un qrcode pour offrire une connexion Wi-Fi sécurisée à vos clients sans saisie de mot de passe via un simple scan.", "/wifi-qr"),
-    ("link", "Url Shortener Pro", "Créez des racourcis d'URL  et suivez le nombre de clics en temps réel.", "/shortener")
+    ("link", "Url Shortener Pro", "Créez  gratuitement un reducteur d'URL conforme RGPD  et suivez le nombre de clics en temps réel.", "/shortener")
 ]
 
 # faq data 
@@ -52,45 +52,47 @@ faq_data = [
         "q": "Pourquoi utiliser un réducteur de lien pour mon commerce ?",
         "a": "Utilisez notre outil <a href='/shortener' class='faq-link'>Shortener Pro</a> pour transformer des URLs complexes en liens courts et mémorisables. Cela permet d'épurer vos supports de communication (flyers, affiches) et de rendre vos liens de boutique plus cliquables sur les réseaux sociaux."
     },
+    {"q":"RetailLink est-il respectueux de la vie privée ?",
+    "a":"Oui. Contrairement aux autres réducteurs de liens, RetailLink ne collecte aucune donnée personnelle sur les personnes qui cliquent sur vos liens. Nous comptabilisons uniquement le nombre total de clics de manière anonyme, sans stocker d'adresses IP ou utiliser de cookies de pistage."},
 ]
 
 guide_data = [
     {
-        "icon": "qr-code", "title": "QR Codes avec Logo", "link": "/qr-tab",
-        "desc": "Pour créer votre code, accédez à notre <a href='/qr-tab' class='faq-link'>générateur QR Pro</a>. Entrez votre URL ou menu PDF, choisissez vos couleurs et ajoutez le logo de votre marque pour un rendu professionnel haute résolution."
+        "icon": "qr-code", "title": "QR Codes simple ou avec Logo", "link": "/qr-tab",
+        "desc": "Sélectionnez le mode URL ou Fiche de données, personnalisez les couleurs et importez votre logo. Le générateur <a href='/qr-tab' class='faq-link'>QR Pro</a> produit un fichier haute résolution prêt pour l'impression de vos menus ou supports marketing."
     },
     {
         "icon": "users", "title": "Identité Digitale", "link": "/digital-id",
-        "desc": "Regroupez vos liens Facebook, Instagram, TikTok et boutique dans une Social Card unique. Utilisez l'outil <a href='/digital-id' class='faq-link'>Identité Digitale</a> pour centraliser votre présence en ligne."
+        "desc": "Sélectionnez vos réseaux (TikTok, Instagram, etc.) et saisissez vos liens. Cet outil crée une <a href='/digital-id' class='faq-link'>Social Card</a> unique pour regrouper toute votre présence en ligne et faciliter l'abonnement de vos clients."
     },
     {
         "icon": "contact", "title": "VCard : Carte de Visite", "link": "/vcard",
-        "desc": "Générez une carte de visite digitale via notre service <a href='/vcard' class='faq-link'>VCard QR</a>. Saisissez vos coordonnées pro pour permettre à vos clients d'enregistrer votre contact d'un simple scan."
+        "desc": "Remplissez vos coordonnées (nom, poste, boutique, adresse GPS). Le service <a href='/vcard' class='faq-link'>VCard QR</a> génère une fiche contact standard que vos clients peuvent enregistrer instantanément dans leur répertoire smartphone d'un seul scan."
     },
     {
         "icon": "message-circle", "title": "QR WhatsApp Direct", "link": "/whatsapp-qr",
-        "desc": "Simplifiez vos prises de contact. Utilisez l'outil <a href='/whatsapp-qr' class='faq-link'>QR WhatsApp</a> pour générer un lien direct ouvrant une discussion avec un message automatique personnalisé."
+        "desc": "Entrez votre numéro et rédigez un message d'accueil automatique. L'outil <a href='/whatsapp-qr' class='faq-link'>QR WhatsApp</a> génère un lien direct pour automatiser vos prises de commandes ou votre service client sans saisie de numéro."
     },
     {
         "icon": "tag", "title": "Étiquettes de Soldes", "link": "/soldes",
-        "desc": "Préparez vos promotions avec notre <a href='/soldes' class='faq-link'>générateur d'étiquettes de prix</a>. Indiquez le prix d'origine et le prix remisé pour obtenir un visuel avec prix barré et code-barres conforme."
+        "desc": "Saisissez le prix d'origine, le prix remisé et le code EAN-13. Notre <a href='/soldes' class='faq-link'>générateur d'étiquettes</a> crée un visuel pro avec prix barré, disponible en téléchargement individuel ou en planche A4 prête à imprimer."
     },
     {
         "icon": "barcode", "title": "Barcode EAN-13 & 128", "link": "/barcode-tab",
-        "desc": "Gérez vos stocks avec notre <a href='/barcode-tab' class='faq-link'>moteur de codes-barres</a>. Saisissez vos chiffres pour créer des étiquettes EAN-13 ou Code 128 lisibles par tous les scanners laser standards."
+        "desc": "Choisissez le format EAN-13 pour la vente ou Code 128 pour la logistique. Entrez vos chiffres et le <a href='/barcode-tab' class='faq-link'>moteur de codes-barres</a> génère des étiquettes techniques lisibles par tous les scanners laser du commerce."
     },
     {
         "icon": "image", "title": "Détourage IA de Produit", "link": "/rembg-tab",
-        "desc": "Optimisez vos photos pour Vinted ou Shopify. L'outil <a href='/rembg-tab' class='faq-link'>RemBg IA</a> supprime automatiquement l'arrière-plan de vos images pour créer des PNG transparents de qualité studio."
+        "desc": "Importez votre photo au format JPG ou PNG. L'outil <a href='/rembg-tab' class='faq-link'>RemBg IA</a> analyse le sujet et supprime automatiquement l'arrière-plan pour créer des images de produits en PNG transparent de qualité studio."
     },
     {
         "icon": "wifi", "title": "QR Code Accès Wi-Fi", "link": "/wifi-qr",
-        "desc": "Générez un accès sécurisé via notre <a href='/wifi-qr' class='faq-link'>QR Wi-Fi</a>. Vos clients se connectent à votre réseau sans aucune saisie manuelle de mot de passe, simplement en scannant le code."
+        "desc": "Saisissez le nom de votre réseau (SSID) et sa clé de sécurité. Le <a href='/wifi-qr' class='faq-link'>QR Wi-Fi</a> génère un code de connexion automatique sécurisée permettant à vos visiteurs de se connecter sans taper de mot de passe."
     },
     {
         "icon": "link", "title": "Réducteur de Liens Pro", "link": "/shortener",
-        "desc": "Optimisez vos communications digitales : transformez vos longues URLs de boutique Shopify ou Amazon en liens courts via notre service <a href='/shortener' class='faq-link'>RetailLink</a>. C'est l'outil parfait pour vos bios Instagram ou vos étiquettes de produits."
-    },
+        "desc": "Collez votre URL longue et personnalisez l'alias pour vos campagnes. Via <a href='/shortener' class='faq-link'>RetailLink</a>, vous obtenez un lien court permanent, conforme au RGPD, tout en suivant vos statistiques de clics en temps réel."
+    }
 ]
 
 

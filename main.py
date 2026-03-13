@@ -57,13 +57,16 @@ adsense_script = Script(
 # --- SEO & META TAGS ---
 # --- SEO & META TAGS ---
 meta_tags = (
-    Meta(name="description", content="RetailBox - Outils pro gratuits : Générez vos QR Codes HD, Barcodes EAN13, Étiquettes de Soldes et détourage photo IA en un clic."),
-    Meta(name="keywords", content="Générer QR Code gratuit, Barcode EAN13, Étiquettes soldes prix barré, Rembg IA, RetailBox"),
+    Meta(name="description", content="RetailBox : Outils pro gratuits. Générez QR Codes HD avec logo, réducteur de liens (Shortener), étiquettes de soldes prix barré, codes-barres EAN13, détourage photo IA et identité digitale."),
     
+    # Keywords : Les mots que les gens tapent sur Google
+    Meta(name="keywords", content="réducteur de lien gratuit, URL shortener pro, RetailLink, générer QR Code gratuit, QR Code avec logo, barcode EAN13, code 128, étiquettes soldes prix barré, détourage photo IA, PNG transparent, VCard contact, QR Code WhatsApp, QR Code Wifi, identité digitale, bio link QR, outils commerce, RetailBox"),
+   
     # BALISES OPEN GRAPH (FACEBOOK / WHATSAPP / LINKEDIN)
-    Meta(property="og:title", content="RetailBox | Vos Outils Pro 100% Gratuits"),
-    Meta(property="og:description", content="Générez vos codes-barres, QR codes de menu et transformez vos photos produits instantanément avec nos outils IA."),
-    Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png?v=3"), # On incrémente la version
+   
+    Meta(property="og:title", content="RetailBox | La Suite d'Outils Digitaux pour Commerçants et Créateurs"),
+    Meta(property="og:description", content="Des outils gratuits en un clic : QR Codes, Barcodes, Url Shortener, IA Image, et Identité Digitale. Sans inscription."),
+    Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png?v=4"), # On incrémente la version
     Meta(property="og:image:type", content="image/png"),
     Meta(property="og:image:width", content="1200"),
     Meta(property="og:image:height", content="630"),
@@ -760,37 +763,71 @@ def get():
 @rt("/shortener")
 def get():
     content = Div(
-        H2("Réducteur de liens RetailLink", cls="gradient-text"),
-        P("Transformez vos longues URLs de boutiques en liens courts et suivez vos performances."),
+        H2("RetailLink : Réducteur de liens pro", cls="gradient-text"),
+        P("Créez des liens courts mémorisables pour vos réseaux sociaux et suivez vos performances."),
         
         Form(
-            Input(name="url", placeholder="Collez votre lien ici (ex: https://shopify.com/mon-produit-tres-long)", required=True),
-            Button("🚀 Réduire le lien", cls="btn-full"),
-            hx_post="/gen-short", hx_target="#o"
+            Label("Lien de destination (URL longue)", 
+                  Input(name="url", placeholder="https://votre-boutique.com/produit-tres-long", required=True)),
+            
+            Label("Alias personnalisé (Optionnel)", 
+                  Input(name="custom_code", 
+                        placeholder="Ex: promo2026", 
+                        maxlength="20",
+                        # On empêche les espaces et caractères spéciaux en direct
+                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9-_]/g, '');")),
+            P("Laissez vide pour générer un code aléatoire.", style="font-size:0.8rem; opacity:0.6;"),
+            
+            Button("🚀 Réduire et personnaliser", cls="btn-full"),
+            hx_post="/gen-short", hx_target="#short-result"
         ),
-        Div(id="o"),
+        Div(id="short-result"),
         cls="modern-card"
     )
-    return Layout(content, "Accueil")
+    return Layout(content, "Shortener")
+
 
 @rt("/gen-short", methods=["POST"])
-async def post(url: str, request):
-    if not supabase: return P("Service temporairement indisponible (DB)")
+async def post(url: str, custom_code: str, request):
+    if not supabase: 
+        return P("❌ Service de base de données non configuré.", style="color:red;")
 
-    code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-    
-    # Insertion dans Supabase
-    supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
-    
+    # 1. Déterminer le code final
+    if custom_code and custom_code.strip():
+        code = custom_code.strip().lower()
+        # Vérifier si l'alias est déjà pris
+        check = supabase.table("links").select("short_code").eq("short_code", code).execute()
+        if check.data:
+            return P(f"❌ L'alias '{code}' est déjà utilisé. Choisissez-en un autre.", 
+                     style="color:red; font-weight:bold; padding:10px; border:1px solid red; border-radius:10px;")
+    else:
+        # Génération aléatoire comme avant si vide
+        code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+
+    # 2. Insertion dans Supabase
+    try:
+        supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
+    except Exception as e:
+        return P(f"Erreur lors de la création : {e}", style="color:red;")
+
+    # 3. Construction du lien
+    # On récupère le domaine actuel (ex: https://baadjis-utilitybox.hf.space/)
     base_url = str(request.base_url)
-    # Si Hugging Face masque l'URL, on peut forcer ton domaine hf.space ici
     short_link = f"{base_url}s/{code}"
     
     return Div(
-        H4("Votre lien permanent est prêt :"),
-        Input(value=short_link, readonly=True, style="text-align:center; font-weight:bold;"),
-        A(Button("📊 Voir les stats", cls="outline"), href=f"/stats/{code}"),
-        style="text-align:center; margin-top:2rem;"
+        H4("Votre lien personnalisé est prêt !"),
+        # Input en lecture seule pour faciliter la copie
+        Input(value=short_link, readonly=True, 
+              style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.2rem;"),
+        
+        Grid(
+            A(Button("📊 Voir les statistiques", cls="outline"), href=f"/stats/{code}"),
+            # Petit script pour copier le lien en un clic
+            Button("📋 Copier le lien", cls="outline", 
+                   onclick=f"navigator.clipboard.writeText('{short_link}'); alert('Lien copié !')")
+        ),
+        style="text-align:center; margin-top:2rem; padding:2rem; background:rgba(0,0,0,0.02); border-radius:24px; border: 2px solid var(--primary);"
     )
 
 @rt("/s/{code}")
@@ -872,6 +909,9 @@ def get():
         
         H4("4. Liens Externes"),
         P("RetailBox contient des liens vers des services tiers (WhatsApp, Facebook, etc.). Nous ne sommes pas responsables de la gestion des données sur ces plateformes externes."),
+        
+        H4("5. Réducteur de liens (RetailLink)"),
+        P("Notre service de réduction d'URL a été conçu selon le principe de 'Privacy by Design'. Nous mesurons l'audience des liens de manière strictement quantitative (compteur de clics). Aucune donnée permettant d'identifier l'utilisateur final (comme l'adresse IP ou des identifiants publicitaires) n'est collectée lors de la redirection."),
         cls="modern-card"
     )
     return Layout(content, "Vie Privée")
@@ -1075,7 +1115,13 @@ def get():
                 Div(
                     H5("Optimisation IA"),
                     P("Le détourage automatique (RemBg) est optimal lorsque le produit est photographié sur un fond uni, même s'il n'est pas parfaitement blanc.")
-                )
+                ),
+                Div(
+                    H5("Personnalisation URL shortener"),
+                    P("Utilisez l'alias personnalisé pour vos campagnes de soldes. Créez des liens comme /s/soldes-2026 pour identifier immédiatement la source de vos clics")
+                ),
+
+
             ),
             cls="modern-card", 
             style="margin-top:5rem; padding:3rem; border-left: 6px solid var(--primary); background: rgba(79, 70, 229, 0.03);"
