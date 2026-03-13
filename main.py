@@ -759,103 +759,127 @@ def get():
     content = Div(H2("QR Wi-Fi"), Form(Input(name="s", placeholder="SSID"), Button("Générer"), hx_post="/gen-wifi", hx_target="#o"), Div(id="o"), cls="modern-card")
     return Layout(content, "Accueil")
 
-
+# --- ROUTE : PAGE DU FORMULAIRE ---
 @rt("/shortener")
 def get():
     content = Div(
         H2("RetailLink : Réducteur de liens pro", cls="gradient-text"),
-        P("Créez des liens courts mémorisables pour vos réseaux sociaux et suivez vos performances."),
+        P("Créez des URLs mémorables sous le domaine ", B("rtbx.space"), " et suivez l'engagement de vos clients en temps réel."),
         
         Form(
             Label("Lien de destination (URL longue)", 
-                  Input(name="url", placeholder="https://votre-boutique.com/produit-tres-long", required=True)),
+                  Input(name="url", type="url", placeholder="https://votre-boutique.com/produit-tres-long", required=True)),
             
             Label("Alias personnalisé (Optionnel)", 
                   Input(name="custom_code", 
-                        placeholder="Ex: promo2026", 
+                        placeholder="Ex: promo-printemps", 
                         maxlength="20",
-                        # On empêche les espaces et caractères spéciaux en direct
-                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9-_]/g, '');")),
-            P("Laissez vide pour générer un code aléatoire.", style="font-size:0.8rem; opacity:0.6;"),
+                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9-_]/g, '').toLowerCase();")),
+            P("Laissez vide pour un code aléatoire. Pas d'espaces, uniquement lettres, chiffres et tirets.", 
+              style="font-size:0.8rem; opacity:0.6;"),
             
-            Button("🚀 Réduire et personnaliser", cls="btn-full"),
-            hx_post="/gen-short", hx_target="#short-result"
+            Button("🚀 Réduire et activer sur rtbx.space", cls="btn-full"),
+            hx_post="/gen-short", hx_target="#short-result", hx_indicator="#loading-short"
         ),
+        Div(id="loading-short", cls="htmx-indicator", aria_busy="true", style="text-align:center;"),
         Div(id="short-result"),
         cls="modern-card"
     )
     return Layout(content, "Shortener")
 
 
+# --- ROUTE : LOGIQUE DE GÉNÉRATION ---
 @rt("/gen-short", methods=["POST"])
-async def post(url: str, custom_code: str, request):
-    if not supabase: 
-        return P("❌ Service de base de données non configuré.", style="color:red;")
+async def post(url: str, custom_code: str):
+    if not supabase: return P("❌ Erreur : Connexion à la base de données impossible.", style="color:red;")
 
-    # 1. Déterminer le code final
+    # 1. Définition du code (Priorité au custom, sinon aléatoire 4 car.)
     if custom_code and custom_code.strip():
         code = custom_code.strip().lower()
-        # Vérifier si l'alias est déjà pris
+        # Vérification d'unicité dans Supabase
         check = supabase.table("links").select("short_code").eq("short_code", code).execute()
         if check.data:
-            return P(f"❌ L'alias '{code}' est déjà utilisé. Choisissez-en un autre.", 
-                     style="color:red; font-weight:bold; padding:10px; border:1px solid red; border-radius:10px;")
+            return Div(P(f"❌ L'alias '{code}' est déjà utilisé par un autre commerçant. Choisissez un autre nom.", 
+                         style="color:red; font-weight:bold;"), cls="modern-card", style="border-color:red;")
     else:
-        # Génération aléatoire comme avant si vide
-        code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+        # Code aléatoire court (4 caractères suffisent pour des millions de combinaisons)
+        code = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
 
-    # 2. Insertion dans Supabase
+    # 2. Sauvegarde dans Supabase
     try:
         supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
     except Exception as e:
-        return P(f"Erreur lors de la création : {e}", style="color:red;")
+        return P(f"Erreur technique Supabase : {e}", style="color:red;")
 
-    # 3. Construction du lien
-    # On récupère le domaine actuel (ex: https://baadjis-utilitybox.hf.space/)
-    base_url = str(request.base_url)
-    short_link = f"{base_url}s/{code}"
+    # 3. CONSTRUCTION DE L'URL OFFICIELLE (Ton nouveau domaine Vercel)
+    direct_domain = "rtbx.space"
+    short_link = f"https://{direct_domain}/s/{code}"
     
     return Div(
-        H4("Votre lien personnalisé est prêt !"),
-        # Input en lecture seule pour faciliter la copie
-        Input(value=short_link, readonly=True, 
-              style="text-align:center; font-weight:bold; color:var(--primary); font-size:1.2rem;"),
+        H4("✅ Votre RetailLink est prêt !"),
+        # Champ optimisé pour la lecture et la copie
+        Input(value=short_link, readonly=True, id="shortlink-res",
+              style="text-align:center; font-weight:800; color:var(--primary); font-size:1.2rem; border:2px solid var(--primary); background:#fff;"),
         
         Grid(
-            A(Button("📊 Voir les statistiques", cls="outline"), href=f"/stats/{code}"),
-            # Petit script pour copier le lien en un clic
-            Button("📋 Copier le lien", cls="outline", 
-                   onclick=f"navigator.clipboard.writeText('{short_link}'); alert('Lien copié !')")
+            Button("📋 Copier le lien", onclick="copyToClipboard()", cls="btn-full"),
+            A(Button("📊 Voir les stats", cls="outline"), href=f"/stats/{code}")
         ),
-        style="text-align:center; margin-top:2rem; padding:2rem; background:rgba(0,0,0,0.02); border-radius:24px; border: 2px solid var(--primary);"
+        
+        Script("""
+            function copyToClipboard() {
+                var copyText = document.getElementById("shortlink-res");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(copyText.value);
+                alert("Lien rtbx.space copié !");
+            }
+        """),
+        style="text-align:center; margin-top:2rem; padding:2rem; background:rgba(79, 70, 229, 0.05); border-radius:24px; border: 1px solid var(--primary);"
     )
 
+# --- ROUTE : REDIRECTION FALLBACK (Hugging Face) ---
+# Si quelqu'un utilise l'URL .hf.space/s/code au lieu de rtbx.space
 @rt("/s/{code}")
 def get(code: str):
-    # Récupérer l'URL
     if not supabase: return RedirectResponse("/")
     res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
     if res.data:
-        long_url = res.data[0]['long_url']
-        new_clicks = res.data[0]['clicks'] + 1
-        # Update du compteur en arrière-plan
-        supabase.table("links").update({"clicks": new_clicks}).eq("short_code", code).execute()
-        return RedirectResponse(long_url)
-    return P("Lien non trouvé.")
+        # On incrémente le clic même si ça passe par ici
+        supabase.table("links").update({"clicks": res.data[0]['clicks'] + 1}).eq("short_code", code).execute()
+        return RedirectResponse(res.data[0]['long_url'])
+    return Layout(P("Lien non trouvé ou expiré."), "Oups")
 
 
+# --- ROUTE : STATISTIQUES ---
 @rt("/stats/{code}")
 def get(code: str):
     if not supabase: return RedirectResponse("/")
-    res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
+    res = supabase.table("links").select("long_url, clicks", "created_at").eq("short_code", code).execute()
+    
     if res.data:
+        item = res.data[0]
+        # Formatage de la date
+        date_obj = datetime.fromisoformat(item['created_at'].replace('Z', '+00:00'))
+        date_str = date_obj.strftime("%d/%m/%Y à %H:%M")
+
         content = Div(
-            H2(f"Stats pour {code}"),
-            Card(H3(f"{res.data[0]['clicks']} clics"), P(f"Vers : {res.data[0]['long_url']}")),
+            H2(f"Analyse du lien : {code}", cls="gradient-text"),
+            Div(
+                H3(f"{item['clicks']}", style="font-size:4rem; margin:0; color:var(--primary);"),
+                P("CLICS TOTALS", style="font-weight:800; letter-spacing:1px; opacity:0.6;"),
+                style="text-align:center; padding:2rem; background:rgba(79, 70, 229, 0.05); border-radius:30px; margin-bottom:2rem;"
+            ),
+            Grid(
+                Div(B("Destination :"), P(item['long_url'], style="word-break:break-all; font-size:0.9rem;")),
+                Div(B("Créé le :"), P(date_str))
+            ),
+            A(Button("← Créer un autre lien", cls="outline", style="margin-top:2rem;"), href="/shortener"),
             cls="modern-card"
         )
-        return Layout(content, "Stats")
-
+        return Layout(content, "Statistiques")
+    
+    return Layout(P("Lien introuvable dans notre base de données."), "Erreur")
 # --- PAGES LEGALES ---
 @rt("/ads.txt")
 def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
