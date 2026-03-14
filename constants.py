@@ -478,21 +478,30 @@ I18N_PATTERNS = {
     'tip': "💡 Conseil : Utilisez l'application 'Appareil Photo' native de l'iPhone pour une connexion automatique fluide.",
     'filename': "wifi-retailbox.png"
 },
-'shortener':{
+
+'shortener': {
     'title': "RetailLink : Réducteur & Statistiques",
-    'sub': "Créez des URLs mémorables et suivez l'engagement en temps réel.",
+    'sub': "Créez des URLs mémorables sous le domaine rtbx.space et suivez l'engagement en temps réel.",
     'label_url': "Lien de destination (URL longue)",
     'label_custom': "Alias personnalisé (Optionnel)",
     'ph_custom': "Ex: promo-printemps",
-    'btn_gen': "🚀 Réduire et Activer",
+    'info_custom': "Laissez vide pour un code aléatoire. Pas d'espaces, uniquement lettres, chiffres et tirets.",
+    'btn_gen': "🚀 Réduire et activer sur rtbx.space",
     'res_title': "✅ Votre RetailLink est prêt !",
     'qr_info': "Ce QR Code redirige vers votre lien court et permet de suivre les scans.",
     'dl_qr': "⬇️ Télécharger le QR du lien",
     'stats_btn': "📊 Voir les stats",
     'copy_btn': "📋 Copier le lien",
-    'err_db': "❌ Erreur : Base de données non connectée.",
-    'err_taken': "❌ Cet alias est déjà utilisé.",
-}
+    'copy_alert': "Lien rtbx.space copié !",
+    'err_db': "❌ Erreur : Connexion à la base de données impossible.",
+    'err_taken': "❌ Cet alias est déjà utilisé par un autre commerçant.",
+    'err_empty': "❌ Erreur : Données manquantes.",
+    'stats_title': "Analyse du lien :",
+    'stats_clics': "CLICS / SCANS",
+    'stats_dest': "Destination :",
+    'stats_date': "Créé le :",
+    'btn_back': "← Créer un autre lien"
+},
 
     },
     'en': {
@@ -603,21 +612,30 @@ I18N_PATTERNS = {
     'btn': "🚀 Generate Wi-Fi Access",
     'tip': "💡 Tip: Use the native iPhone 'Camera' app for a smooth automatic connection.",
     'filename': "wifi-access-pro.png"
-},
-'shortener':{
-    'title': "RetailLink: Shortener & Stats",
-    'sub': "Create memorable URLs and track engagement in real-time.",
-    'label_url': "Destination Link (Long URL)",
-    'label_custom': "Custom Alias (Optional)",
+}
+,
+'shortener': {
+    'title': "RetailLink: Shortener & Analytics",
+    'sub': "Create memorable URLs under the rtbx.space domain and track engagement in real-time.",
+    'label_url': "Destination link (Long URL)",
+    'label_custom': "Custom alias (Optional)",
     'ph_custom': "e.g. spring-sale",
-    'btn_gen': "🚀 Shorten and Activate",
+    'info_custom': "Leave blank for a random code. No spaces, only letters, numbers, and hyphens.",
+    'btn_gen': "🚀 Shorten and activate on rtbx.space",
     'res_title': "✅ Your RetailLink is ready!",
-    'qr_info': "This QR Code redirects to your short link and allows scan tracking.",
+    'qr_info': "This QR Code redirects to your short link and enables scan tracking.",
     'dl_qr': "⬇️ Download Link QR",
-    'stats_btn': "📊 View Stats",
-    'copy_btn': "📋 Copy Link",
-    'err_db': "❌ Error: Database not connected.",
-    'err_taken': "❌ This alias is already taken.",
+    'stats_btn': "📊 View stats",
+    'copy_btn': "📋 Copy link",
+    'copy_alert': "rtbx.space link copied!",
+    'err_db': "❌ Error: Database connection failed.",
+    'err_taken': "❌ This alias is already taken by another merchant.",
+    'err_empty': "❌ Error: Missing data.",
+    'stats_title': "Link Analytics:",
+    'stats_clics': "TOTAL CLICKS / SCANS",
+    'stats_dest': "Destination:",
+    'stats_date': "Created on:",
+    'btn_back': "← Create another link"
 }
 
 

@@ -333,12 +333,28 @@ def generate_pdf_sheet(label_pil_img):
     buffer.seek(0)
     return buffer
 
+def current_lang(request):
+    # On cherche le cookie 'lang', si absent on met 'fr' par défaut
+    return request.cookies.get('lang', 'fr')
+
 # --- ROUTES ACCUEIL ---
 
+@rt("/set-lang/{lang}")
+def get(lang: str, request,session):
+    # On définit où l'utilisateur doit retourner (la page précédente ou l'accueil)
+    referrer = request.headers.get('referer', '/')
+    res = RedirectResponse(url=referrer)
+    
+    # On enregistre le cookie 'lang' pour 1 an (en secondes)
+    # On met path="/" pour qu'il soit visible sur tout le site
+    session['lang'] = lang 
+    res.set_cookie("lang", lang, max_age=31536000, path="/")
+    return res
+
 @rt("/")
-def get(session):
+def get(request,session):
     # 1. Détection de la langue
-    lang = session.get('lang', 'fr')
+    lang = current_lang(request)
     t = MULTILINGUAL_DATA_Services[lang]
     
     # 2. Génération dynamique des 9 cartes à partir de la liste 'services'
@@ -374,9 +390,9 @@ def get(session):
 #about 
 
 @rt("/about")
-def get(session):
+def get(request,session):
     # Récupération de la langue (fr par défaut)
-    lang = session.get('lang', 'fr')
+    lang = current_lang(request)
     d = ABOUT_DATA[lang]
     
     content = Div(
@@ -408,13 +424,13 @@ def get(session):
 # --- OUTILS ---
 #digital id 
 @rt("/add-social-row")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     return SocialRow(lang)
 
 @rt("/digital-id")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request, session):
+    lang = current_lang(request)
     t_common = I18N_PATTERNS[lang]['common']
     t_spec = I18N_PATTERNS[lang]['social']
 
@@ -456,8 +472,8 @@ def get(session):
     )
     return Layout(content, t_spec['title'], session)
 @rt("/gen-id", methods=["POST"])
-async def post(session, social_networks: list = None, social_handles: list = None):
-    lang = session.get('lang', 'fr')
+async def post(request,session, social_networks: list = None, social_handles: list = None):
+    lang = current_lang(request)
     t_common = I18N_PATTERNS[lang]['common']
     t_spec = I18N_PATTERNS[lang]['social']
     
@@ -479,8 +495,8 @@ async def post(session, social_networks: list = None, social_handles: list = Non
     return generate_qr_response("\n".join(data_lines), t_spec['filename'])
 #vcard
 @rt("/vcard")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request, session):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['vcard']
     
     content = Div(
@@ -519,8 +535,8 @@ def get(session):
     return Layout(content, t['title'], session)
 
 @rt("/gen-vcard", methods=["POST"])
-async def post(session, fn:str="", ln:str="", org:str="", title:str="", tel:str="", email:str="", url:str="", adr:str="", linkedin:str=""):
-    lang = session.get('lang', 'fr')
+async def post(request,session, fn:str="", ln:str="", org:str="", title:str="", tel:str="", email:str="", url:str="", adr:str="", linkedin:str=""):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['vcard']
     
     # Nettoyage LinkedIn pour compatibilité mobile
@@ -556,8 +572,8 @@ async def post(session, fn:str="", ln:str="", org:str="", title:str="", tel:str=
 
 #whatsapp
 @rt("/whatsapp-qr")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['whatsapp']
     
     content = Div(
@@ -586,8 +602,8 @@ def get(session):
 
 
 @rt("/gen-wa", methods=["POST"])
-async def post(session, phone:str, msg:str=""):
-    lang = session.get('lang', 'fr')
+async def post(request,session, phone:str, msg:str=""):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['whatsapp']
     
     # 1. Nettoyage du numéro de téléphone
@@ -605,8 +621,8 @@ async def post(session, phone:str, msg:str=""):
     return generate_qr_response(wa_link, t['filename'])
 
 @rt("/soldes")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['soldes']
     
     content = Div(
@@ -640,8 +656,8 @@ def get(session):
     return Layout(content, t['title'], session)
 
 @rt("/gen-soldes", methods=["POST"])
-async def post(session, item:str, old_p:str, new_p:str, code:str):
-    lang = session.get('lang', 'fr')
+async def post(request ,session, item:str, old_p:str, new_p:str, code:str):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['soldes']
     
     try:
@@ -686,8 +702,8 @@ async def post(session, item:str, old_p:str, new_p:str, code:str):
 
 
 @rt("/barcode-tab")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['barcode']
     
     content = Div(
@@ -714,8 +730,8 @@ def get(session):
     return Layout(content, "Barcode", session)
 
 @rt("/bc-f")
-def get(session, t:str):
-    lang = session.get('lang', 'fr')
+def get(request,session, t:str):
+    lang = current_lang(request)
     p = I18N_PATTERNS[lang]['barcode']
     
     if t == "ean13":
@@ -740,8 +756,8 @@ def get(session):
 
 
 @rt("/gen-bc", methods=["POST"])
-async def post(session, t:str, d:str=None, bc_keys:list=None, bc_vals:list=None):
-    lang = session.get('lang', 'fr')
+async def post(request,session, t:str, d:str=None, bc_keys:list=None, bc_vals:list=None):
+    lang = current_lang(request)
     p = I18N_PATTERNS[lang]['barcode']
     
     try:
@@ -776,8 +792,8 @@ async def post(session, t:str, d:str=None, bc_keys:list=None, bc_vals:list=None)
     
 #rembg
 @rt("/rembg-tab")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['rembg']
     
     content = Div(
@@ -808,8 +824,8 @@ def get(session):
     return Layout(content, "RemBg", session)
 
 @rt("/gen-bg", methods=["POST"])
-async def post(session, image: UploadFile):
-    lang = session.get('lang', 'fr')
+async def post(request,session, image: UploadFile):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['rembg']
     
     try:
@@ -842,8 +858,9 @@ async def post(session, image: UploadFile):
 
 #qrcode
 @rt("/qr-tab")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['qr']
     
     content = Div(
@@ -880,8 +897,8 @@ def get(session):
     return Layout(content, "QR Pro", session)
 
 @rt("/qr-fields")
-def get(session, qr_mode:str):
-    lang = session.get('lang', 'fr')
+def get(request,session, qr_mode:str):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['qr']
     t_common = I18N_PATTERNS[lang]['common']
     
@@ -901,8 +918,8 @@ def get(session):
     return DataRow("qr", session.get('lang', 'fr'))
 
 @rt("/gen-qr", methods=["POST"])
-async def post(session, qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=None, qr_vals:list=None, logo:UploadFile=None):
-    lang = session.get('lang', 'fr')
+async def post(request,session, qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=None, qr_vals:list=None, logo:UploadFile=None):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['qr']
     
     try:
@@ -950,8 +967,8 @@ async def post(session, qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=
 
 #wifi qr 
 @rt("/wifi-qr")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['wifi']
     
     content = Div(
@@ -983,36 +1000,11 @@ def get(session):
     return Layout(content, "Wi-Fi", session)
 
 # --- ROUTE : PAGE DU FORMULAIRE ---
-@rt("/shortener")
-def get():
-    content = Div(
-        H2("RetailLink : Réducteur de liens pro", cls="gradient-text"),
-        P("Créez des URLs mémorables sous le domaine ", B("rtbx.space"), " et suivez l'engagement de vos clients en temps réel."),
-        
-        Form(
-            Label("Lien de destination (URL longue)", 
-                  Input(name="url", type="url", placeholder="https://votre-boutique.com/produit-tres-long", required=True)),
-            
-            Label("Alias personnalisé (Optionnel)", 
-                  Input(name="custom_code", 
-                        placeholder="Ex: promo-printemps", 
-                        maxlength="20",
-                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9-_]/g, '').toLowerCase();")),
-            P("Laissez vide pour un code aléatoire. Pas d'espaces, uniquement lettres, chiffres et tirets.", 
-              style="font-size:0.8rem; opacity:0.6;"),
-            
-            Button("🚀 Réduire et activer sur rtbx.space", cls="btn-full"),
-            hx_post="/gen-short", hx_target="#short-result", hx_indicator="#loading-short"
-        ),
-        Div(id="loading-short", cls="htmx-indicator", aria_busy="true", style="text-align:center;"),
-        Div(id="short-result"),
-        cls="modern-card"
-    )
-    return Layout(content, "Shortener")
+
 
 @rt("/gen-wifi", methods=["POST"])
-async def post(session, ssid:str, password:str="", encryption:str="WPA"):
-    lang = session.get('lang', 'fr')
+async def post(request,session, ssid:str, password:str="", encryption:str="WPA"):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['wifi']
     
     # Construction du format standard Wi-Fi QR
@@ -1026,14 +1018,43 @@ async def post(session, ssid:str, password:str="", encryption:str="WPA"):
     return generate_qr_response(wifi_data, t['filename'])
 
 # --- ROUTE : LOGIQUE DE GÉNÉRATION ---
+# --- PAGE DU FORMULAIRE ---
+@rt("/shortener")
+def get(request, session):
+    lang = current_lang(request)
+    t = I18N_PATTERNS[lang]['shortener']
+    
+    content = Div(
+        H2(t["title"], cls="gradient-text"),
+        P(t["sub"]),
+        
+        Form(
+            Label(t['label_url'], 
+                  Input(name="url", type="url", placeholder="https://...", required=True)),
+            
+            Label(t['label_custom'], 
+                  Input(name="custom_code", placeholder=t['ph_custom'], maxlength="20",
+                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9-_]/g, '').toLowerCase();")),
+            P(t['info_custom'], style="font-size:0.8rem; opacity:0.6;"),
+            
+            Button(t['btn_gen'], cls="btn-full", type="submit"),
+            hx_post="/gen-short", hx_target="#short-result", hx_indicator="#loading-short"
+        ),
+        Div(id="loading-short", cls="htmx-indicator", aria_busy="true", style="text-align:center;"),
+        Div(id="short-result"),
+        cls="modern-card"
+    )
+    return Layout(content, "Shortener", session)
+
+# --- LOGIQUE DE GÉNÉRATION (QR + DB) ---
 @rt("/gen-short", methods=["POST"])
-async def post(session, url: str, custom_code: str):
-    lang = session.get('lang', 'fr')
+async def post(request, session, url: str, custom_code: str):
+    lang = current_lang(request)
     t = I18N_PATTERNS[lang]['shortener']
     
     if not supabase: return P(t['err_db'], style="color:red;")
 
-    # 1. Définition du code
+    # 1. Gestion de l'alias
     if custom_code and custom_code.strip():
         code = custom_code.strip().lower()
         check = supabase.table("links").select("short_code").eq("short_code", code).execute()
@@ -1046,117 +1067,50 @@ async def post(session, url: str, custom_code: str):
     try:
         supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
     except Exception as e:
-        return P(f"Erreur : {e}", style="color:red;")
+        return P(f"Erreur technique : {e}", style="color:red;")
 
-    # 3. Construction du lien pro
+    # 3. Construction du lien et du QR Code
     direct_domain = "rtbx.space"
     short_link = f"https://{direct_domain}/s/{code}"
     
-    # 4. Génération du QR Code pour ce lien court (pour le tracking)
     qr = qrcode.make(short_link)
     buf = BytesIO(); qr.save(buf, format="PNG")
     qr_s = base64.b64encode(buf.getvalue()).decode()
 
     return Div(
         H4(t['res_title']),
-        
-        # Affichage du lien court
         Input(value=short_link, readonly=True, id="shortlink-res",
               style="text-align:center; font-weight:800; color:var(--primary); font-size:1.2rem; border:2px solid var(--primary); background:#fff;"),
         
-        # Affichage du QR Code automatique
         Div(
             Img(src=f"data:image/png;base64,{qr_s}", style="max-width:180px; margin: 1.5rem auto; border: 4px solid white; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"),
             P(t['qr_info'], style="font-size:0.8rem; opacity:0.7;"),
             style="text-align:center;"
         ),
         
-        # Boutons d'actions
         Grid(
             Button(t['copy_btn'], onclick="copyToClipboard()", cls="btn-full"),
             A(Button(t['dl_qr'], cls="outline"), href=f"data:image/png;base64,{qr_s}", download=f"qr-{code}.png")
         ),
         A(Button(t['stats_btn'], cls="outline", style="width:100%; margin-top:10px;"), href=f"/stats/{code}"),
         
-        Script("""
-            function copyToClipboard() {
+        Script(f"""
+            function copyToClipboard() {{
                 var copyText = document.getElementById("shortlink-res");
                 copyText.select();
                 copyText.setSelectionRange(0, 99999);
                 navigator.clipboard.writeText(copyText.value);
-                alert("Lien copié !");
-            }
+                alert("{t['copy_alert']}");
+            }}
         """),
         style="text-align:center; margin-top:2rem; padding:2rem; background:rgba(79, 70, 229, 0.05); border-radius:24px; border: 1px solid var(--primary);"
     )
 
-@rt("/gen-short", methods=["POST"])
-async def post(session, url: str, custom_code: str):
-    lang = session.get('lang', 'fr')
-    t = I18N_PATTERNS[lang]['shortener']
-    
-    if not supabase: return P(t['err_db'], style="color:red;")
-
-    # 1. Définition du code
-    if custom_code and custom_code.strip():
-        code = custom_code.strip().lower()
-        check = supabase.table("links").select("short_code").eq("short_code", code).execute()
-        if check.data:
-            return Div(P(t['err_taken'], style="color:red; font-weight:bold;"), cls="modern-card", style="border-color:red;")
-    else:
-        code = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
-
-    # 2. Sauvegarde Supabase
-    try:
-        supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
-    except Exception as e:
-        return P(f"Erreur : {e}", style="color:red;")
-
-    # 3. Construction du lien pro
-    direct_domain = "rtbx.space"
-    short_link = f"https://{direct_domain}/s/{code}"
-    
-    # 4. Génération du QR Code pour ce lien court (pour le tracking)
-    qr = qrcode.make(short_link)
-    buf = BytesIO(); qr.save(buf, format="PNG")
-    qr_s = base64.b64encode(buf.getvalue()).decode()
-
-    return Div(
-        H4(t['res_title']),
-        
-        # Affichage du lien court
-        Input(value=short_link, readonly=True, id="shortlink-res",
-              style="text-align:center; font-weight:800; color:var(--primary); font-size:1.2rem; border:2px solid var(--primary); background:#fff;"),
-        
-        # Affichage du QR Code automatique
-        Div(
-            Img(src=f"data:image/png;base64,{qr_s}", style="max-width:180px; margin: 1.5rem auto; border: 4px solid white; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"),
-            P(t['qr_info'], style="font-size:0.8rem; opacity:0.7;"),
-            style="text-align:center;"
-        ),
-        
-        # Boutons d'actions
-        Grid(
-            Button(t['copy_btn'], onclick="copyToClipboard()", cls="btn-full"),
-            A(Button(t['dl_qr'], cls="outline"), href=f"data:image/png;base64,{qr_s}", download=f"qr-{code}.png")
-        ),
-        A(Button(t['stats_btn'], cls="outline", style="width:100%; margin-top:10px;"), href=f"/stats/{code}"),
-        
-        Script("""
-            function copyToClipboard() {
-                var copyText = document.getElementById("shortlink-res");
-                copyText.select();
-                copyText.setSelectionRange(0, 99999);
-                navigator.clipboard.writeText(copyText.value);
-                alert("Lien copié !");
-            }
-        """),
-        style="text-align:center; margin-top:2rem; padding:2rem; background:rgba(79, 70, 229, 0.05); border-radius:24px; border: 1px solid var(--primary);"
-    )
-
+# --- PAGE STATISTIQUES ---
 @rt("/stats/{code}")
-def get(session, code: str):
-    lang = session.get('lang', 'fr')
+def get(request, session, code: str):
+    lang = current_lang(request)
+    t = I18N_PATTERNS[lang]['shortener']
     if not supabase: return RedirectResponse("/")
     
     res = supabase.table("links").select("long_url, clicks, created_at").eq("short_code", code).execute()
@@ -1167,46 +1121,35 @@ def get(session, code: str):
         date_str = date_obj.strftime("%d/%m/%Y")
 
         content = Div(
-            H2(f"Analyses du lien : {code}", cls="gradient-text"),
+            H2(f"{t['stats_title']} {code}", cls="gradient-text"),
             Div(
                 H3(f"{item['clicks']}", style="font-size:4rem; margin:0; color:var(--primary);"),
-                P("CLICS / SCANS", style="font-weight:800; opacity:0.6;"),
+                P(t['stats_clics'], style="font-weight:800; opacity:0.6;"),
                 style="text-align:center; padding:2rem; background:rgba(255,255,255,0.5); border-radius:30px; margin-bottom:2rem;"
             ),
             Grid(
-                Div(B("Destination :"), P(item['long_url'], style="word-break:break-all; font-size:0.9rem;")),
-                Div(B("Date :"), P(date_str))
+                Div(B(t['stats_dest']), P(item['long_url'], style="word-break:break-all; font-size:0.9rem;")),
+                Div(B(t['stats_date']), P(date_str))
             ),
-            A(Button("← Nouveau lien", cls="outline", style="margin-top:2rem;"), href="/shortener"),
+            A(Button(t['btn_back'], cls="outline", style="margin-top:2rem;"), href="/shortener"),
             cls="modern-card"
         )
         return Layout(content, "Stats", session)
     
-    return Layout(P("Lien introuvable."), "Erreur", session)
+    return Layout(P("Lien introuvable."), "Error", session)
 
-
-# --- ROUTE DE SECOURS (FALLBACK) AVEC SESSION ---
+# --- REDIRECTION DE SECOURS (FALLBACK) ---
 @rt("/s/{code}")
-def get(code: str, session):
+def get(request, session, code: str):
     if not supabase: return RedirectResponse("/")
     
     try:
-        # On cherche l'URL dans Supabase
-        res = supabase.table("links").select("long_url", "clicks").eq("short_code", code).execute()
-        
+        res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
         if res.data:
-            item = res.data[0]
-            # On incrémente le clic (on garde les stats même sur le lien de secours)
-            supabase.table("links").update({"clicks": item['clicks'] + 1}).eq("short_code", code).execute()
-            
-            # Redirection directe vers l'URL longue
-            return RedirectResponse(item['long_url'])
-            
-        # Si le code n'existe pas, retour à l'accueil (qui utilisera la session pour la langue)
+            supabase.table("links").update({"clicks": res.data[0]['clicks'] + 1}).eq("short_code", code).execute()
+            return RedirectResponse(res.data[0]['long_url'])
         return RedirectResponse("/")
-        
-    except Exception as e:
-        print(f"Erreur redirection fallback: {e}")
+    except:
         return RedirectResponse("/")
 
 # --- PAGES LEGALES ---
@@ -1214,23 +1157,23 @@ def get(code: str, session):
 def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
 
 @rt("/terms")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     return Layout(LegalPage('terms', lang), "Conditions", session)
 
 @rt("/privacy")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     return Layout(LegalPage('privacy', lang), "Confidentialité", session)
 
 @rt("/ugc")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     return Layout(LegalPage('ugc', lang), "UGC", session)
 
 @rt("/contact")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     d = CONTACT_DATA[lang]
     
     # Script AJAX dynamique selon la langue
@@ -1294,8 +1237,8 @@ def get(session):
     return Layout(content, "Contact", session)
 
 @rt("/faq")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     t = MULTILINGUAL_DATA_FaqGuide[lang]
     
     content = Div(
@@ -1321,8 +1264,8 @@ def get(session):
     return Layout(content, "FAQ", session)
 
 @rt("/guide")
-def get(session):
-    lang = session.get('lang', 'fr')
+def get(request,session):
+    lang = current_lang(request)
     t = MULTILINGUAL_DATA_FaqGuide[lang]
     
     # Mapping dynamique sur guide_data
@@ -1351,11 +1294,7 @@ def get(session):
     )
     return Layout(content, "Guide", session)
 
-@rt("/set-lang/{lang}")
-def get(lang: str, session):
-    if lang in ['fr', 'en']:
-        session['lang'] = lang
-    return RedirectResponse(url='/')
+
 if __name__ == "__main__":
     #main
     import uvicorn
