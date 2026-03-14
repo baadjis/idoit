@@ -1,6 +1,7 @@
 import random
 import sqlite3
 import string
+import urllib.parse
 
 from dotenv import load_dotenv
 from fasthtml.common import *
@@ -14,7 +15,7 @@ from barcode.writer import ImageWriter
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import os
-from constants import SOCIAL_NETWORKS, services,faq_data,adsense_script_src,ga_lib_src,guide_data
+from constants import ABOUT_DATA, CONTACT_DATA, CURRENT_YEAR, FOOTER_DATA, I18N_PATTERNS, LEGAL_CONTENT, LOCALES, SOCIAL_NETWORKS, MULTILINGUAL_DATA_FaqGuide, MULTILINGUAL_DATA_MetaTags, MULTILINGUAL_DATA_Services, services,faq_data,adsense_script_src,ga_lib_src,guide_data
 from db import init_db
 from styles import styles
 
@@ -45,7 +46,7 @@ os.environ['U2NET_HOME'] = '/tmp'
 FORMSPREE_ID = os.environ.get("FORMSPREE_ID", "TON_ID_DE_TEST")
 
 # --- CONFIGURATION ---
-CURRENT_YEAR = datetime.now().year
+
 
 adsense_script = Script(
     src=adsense_script_src,
@@ -53,35 +54,13 @@ adsense_script = Script(
     crossorigin="anonymous"
 )
 
+# Le petit losange (hexagone) de ton logo en format favicon
+favicon_link = Link(rel="icon", type="image/svg+xml", href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='3'><path d='M21 16V8l-9-5-9 5v8l9 5 9-5z'></path></svg>")
 
 # --- SEO & META TAGS ---
 # --- SEO & META TAGS ---
-meta_tags = (
-    Meta(name="description", content="RetailBox : Outils pro gratuits. Générez QR Codes HD avec logo, réducteur de liens (Shortener), étiquettes de soldes prix barré, codes-barres EAN13, détourage photo IA et identité digitale."),
-    
-    # Keywords : Les mots que les gens tapent sur Google
-    Meta(name="keywords", content="réducteur de lien gratuit, URL shortener pro, RetailLink, générer QR Code gratuit, QR Code avec logo, barcode EAN13, code 128, étiquettes soldes prix barré, détourage photo IA, PNG transparent, VCard contact, QR Code WhatsApp, QR Code Wifi, identité digitale, bio link QR, outils commerce, RetailBox"),
-   
-    # BALISES OPEN GRAPH (FACEBOOK / WHATSAPP / LINKEDIN)
-   
-    Meta(property="og:title", content="RetailBox | La Suite d'Outils Digitaux pour Commerçants et Créateurs"),
-    Meta(property="og:description", content="Des outils gratuits en un clic : QR Codes, Barcodes, Url Shortener, IA Image, et Identité Digitale. Sans inscription."),
-    Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png?v=4"), # On incrémente la version
-    Meta(property="og:image:type", content="image/png"),
-    Meta(property="og:image:width", content="1200"),
-    Meta(property="og:image:height", content="630"),
-    Meta(property="og:url", content="https://baadjis-utilitybox.hf.space"),
-    Meta(property="og:type", content="website"),
-    Meta(property="og:site_name", content="RetailBox"),
-    
-    # BALISE TWITTER / X
-    Meta(name="twitter:card", content="summary_large_image"),
-    Meta(name="twitter:title", content="RetailBox | Outils Commerce Gratuits"),
-    Meta(name="twitter:description", content="L'outil indispensable pour les retailers et entrepreneurs."),
-    
-    Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
-    Meta(name="color-scheme", content="light")
-)
+
+
 
 # --- STYLE STABILISÉ & TYPOGRAPHIE ---
 custom_style = Style(styles)
@@ -96,129 +75,182 @@ ga_config = Script("""
   gtag('config', 'G-YV2LEDEMR8');
 """)
 
-app, rt = fast_app(static_path='public', hdrs=(*meta_tags, Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"), custom_style,
-                                               ga_lib, ga_config, adsense_script, Script(src="https://unpkg.com/lucide@latest"),# Dans ton main.py, assure-toi que ce script est présent pour HTMX
-Script("""
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
-        lucide.createIcons();
-    });
-""")))
+app, rt = fast_app(
+    static_path='public', 
+    hdrs=(
+        favicon_link,
+        # On garde le CSS et les outils tiers ici
+        Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"), 
+        custom_style,
+        ga_lib, ga_config, adsense_script, 
+        Script(src="https://unpkg.com/lucide@latest"),
+        Script("""
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                lucide.createIcons();
+            });
+        """)
+    )
+)
 
+
+
+def get_translated_metas(lang):
+    m = MULTILINGUAL_DATA_MetaTags[lang]['meta']
+    return (
+        Title(m['title']),
+        Meta(name="description", content=m['desc']),
+        Meta(name="keywords", content=m['keywords']),
+        
+        # Open Graph (Facebook / WhatsApp)
+        Meta(property="og:title", content=m['og_title']),
+        Meta(property="og:description", content=m['og_desc']),
+        Meta(property="og:image", content="https://baadjis-utilitybox.hf.space/og-banner.png?v=4"),
+        Meta(property="og:url", content="https://baadjis-utilitybox.hf.space"),
+        Meta(property="og:type", content="website"),
+        Meta(property="og:site_name", content="RetailBox"),
+        
+        # Twitter
+        Meta(name="twitter:card", content="summary_large_image"),
+        Meta(name="twitter:title", content=m['og_title']),
+        Meta(name="twitter:description", content=m['og_desc']),
+        
+        # Mobile & Theme
+        Meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1"),
+        Meta(name="color-scheme", content="light")
+    )
 
 # --- COMPOSANTS ---
 
 def Logo():
     return Div(
         Safe(f'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="3"><defs><linearGradient id="grad"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#9333ea"/></linearGradient></defs><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"></path></svg>'),
-        H1("RetailBox", cls="gradient-text", style="margin:0; font-size:1.4rem;"), style="display:flex; align-items:center; justify-content:center; gap:8px;"
+         H1("RetailBox", cls="gradient-text", 
+           style="margin:0; font-size:1.2rem; font-weight:800;"), # gradient-text gère sa propre couleur
+        style="display:flex; align-items:center; gap:5px; flex-shrink: 0;"
     )
 
-def SeoInstructional():
-    return Section(
-        Div(
-            H2("Guide complet : Comment générer vos services gratuitement"),
-            # Première ligne : Identité et Contacts
-            Grid(
-                Div(
-                    H4("🚀 QR Codes avec ou sans Logo"), 
-                    P("Entrez votre URL ou le lien de votre menu restaurant PDF. Personnalisez les couleurs et ajoutez le logo de votre marque. Téléchargez un QR code haute résolution prêt pour l'impression.")
-                ),
-                Div(
-                    H4("🌐 Identité Digitale"), 
-                    P("Centralisez votre présence : regroupez Facebook, Instagram, TikTok et Shopify dans un seul QR Code 'Social Card' unique pour faciliter l'accès à vos abonnés.")
-                ),
-                Div(
-                    H4("👤 VCard : Carte de Visite"), 
-                    P("Créez une carte de visite digitale. Saisissez vos coordonnées pro (nom, tel, email). Le QR généré permet à vos clients d'enregistrer votre contact d'un simple scan.")
-                ),
-                Div(
-                    H4("💬 QR WhatsApp Direct"), 
-                    P("Boostez vos commandes : générez un lien QR qui ouvre instantanément une discussion WhatsApp avec un message pré-rempli pour votre boutique ou service client.")
-                ),
-            ),
-            # Deuxième ligne : Commerce et Technique
-            Grid(
-                Div(
-                    H4("🏷️ Étiquettes de Soldes"), 
-                    P("Générez vos étiquettes de prix : indiquez le prix d'origine et le prix remisé. L'outil crée un visuel pro avec prix barré et code-barres conforme pour vos rayons.")
-                ),
-                Div(
-                    H4("🔢 Barcode EAN-13 & 128 "), 
-                    P("Gérez vos stocks facilement. Saisissez vos chiffres pour générer des codes-barres standards (EAN-13 commerce ou Code 128 logistique) lisibles par tous les scanners laser.")
-                ),
-                Div(
-                    H4("🖼️ Détourage IA de Produit"), 
-                    P("Optimisez vos photos : importez vos fichiers JPG/PNG. Notre Intelligence Artificielle supprime l'arrière-plan automatiquement pour créer des PNG transparents qualité studio.")
-                ),
-                Div(
-                    H4("📶 QR Code Accès Wi-Fi"), 
-                    P("Service client premium : entrez le nom de votre réseau et le mot de passe pour générer un code de connexion automatique sécurisée sans aucune saisie manuelle.")
-                ),
-            ),
-            cls="modern-card", 
-            style="margin-top:4rem; border-style: solid; border-width: 2px; border-color: var(--primary);"
-        )
+def LegalPage(page_key, lang='fr'):
+    data = LEGAL_CONTENT[lang][page_key]
+    
+    # Construction dynamique des sections
+    sections_html = []
+    for sec in data['sections']:
+        elements = [H4(sec['h']), P(sec['p'])]
+        if 'li' in sec:
+            elements.append(Ul(*[Li(item) for item in sec['li']]))
+        sections_html.append(Div(*elements))
+
+    return Div(
+        H2(data['title']),
+        P(data['date'], style="opacity: 0.6; font-size: 0.85rem;"),
+        *sections_html,
+        cls="modern-card"
     )
-def FooterSection():
+
+def FooterSection(lang='fr'):
+    d = FOOTER_DATA[lang]
+    l = d['links']
+    
     return Footer(
-        # Section supérieure : 3 colonnes d'informations rassurer l'utilisateur
+        # Section supérieure : 3 colonnes d'informations
         Div(
-            Div(
-                H4("🚀 Usage & Service"), 
-                P("Génération technique haute performance en mémoire vive pour retailers."), 
-                cls="footer-section"
-            ),
-            Div(
-                H4("🛡️ Confidentialité"), 
-                P("Zéro stockage sur nos serveurs. Vos données et images sont éphémères."), 
-                cls="footer-section"
-            ),
-            Div(
-                H4("👤 Propriété UGC"), 
-                P("User Generated Content : Vous détenez 100% des droits sur vos fichiers générés."), 
-                cls="footer-section"
-            ),
+            Div(H4(d['h_usage']), P(d['p_usage']), cls="footer-section"),
+            Div(H4(d['h_privacy']), P(d['p_privacy']), cls="footer-section"),
+            Div(H4(d['h_ugc']), P(d['p_ugc']), cls="footer-section"),
             cls="footer-content"
         ),
         
         # Section inférieure : Liens de navigation et mentions légales
         Div(
-            A("À Propos", href="/about"), # Ajouté ici pour la cohérence
-            A("Guide Complet", href="/guide"), # Ajouté
-            A("FAQ", href="/faq"), 
-            A("Conditions", href="/terms"), 
-            A("Vie Privée", href="/privacy"), 
-            A("UGC", href="/ugc"), 
-            A("Contact", href="/contact"),
+            A(l['about'], href="/about"),
+            A(l['guide'], href="/guide"),
+            A(l['faq'], href="/faq"), 
+            A(l['terms'], href="/terms"), 
+            A(l['privacy'], href="/privacy"), 
+            A(l['ugc'], href="/ugc"), 
+            A(l['contact'], href="/contact"),
             Span(f"© {CURRENT_YEAR} RetailBox"),
             cls="legal-links"
         ),
         cls="pro-footer"
     )
-def Layout(content, active_page, title="RetailBox"):
+
+def LangSwitcher(current_lang):
+    target_lang = 'en' if current_lang == 'fr' else 'fr'
+    label = "🇬🇧 EN" if current_lang == 'fr' else "🇫🇷 FR"
+    return A(label, href=f"/set-lang/{target_lang}", cls="lang-btn", 
+             style="""
+                border: 2px solid var(--primary) !important;
+                background: transparent !important;
+                color: var(--primary) !important;
+                border-radius: 12px !important;
+                font-weight: 800;
+                padding: 0.4rem 0.8rem;
+                text-decoration: none !important;
+             """)
+
+def Layout(content, active_page, session, title="RetailBox"):
+    lang = session.get('lang', 'fr')
+    t = LOCALES[lang]
+    page_metas = get_translated_metas(lang)
+    # On ajoute "Contact" et "Dashboard" si besoin pour un menu complet
     nav_items = [
-        ("Accueil", "/", "home"), 
-        ("Guide", "/guide", "book-open"), 
-        ("FAQ", "/faq", "help-circle"), 
-        ("À Propos", "/about", "info"),
-        ("Contact", "/contact", "mail")
+        (t['home'], "/", "home"), 
+        (t['guide'], "/guide", "book-open"), 
+        (t['faq'], "/faq", "help-circle"), 
+        (t['about'], "/about", "info")
     ]
-    return Title(f"{active_page} | {title}"), Main(
+    
+    return page_metas , Title(f"{active_page} | {title}"), Main(
         Header(
-            Logo(),
-            Div(H1("Générez et Transformez en un clic", cls="hero-title gradient-text"), style="text-align:center;"),
-            Div(Nav(Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:18px"></i> {name}'), href=url, cls="active" if active_page == name else "") for name, url, icon in nav_items], cls="nav-pills")), cls="nav-scroll-container")
+            # --- LA BARRE DE NAVIGATION (Logo | Tabs | Lang) ---
+            Div(
+                # 1. Logo (à gauche)
+                Logo(),
+                
+                # 2. Tabs (au centre, défilables sur mobile)
+                Div(
+                    Nav(
+                        Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:16px"></i> {name}'), 
+                               href=url, 
+                               cls="active" if active_page == name else "") 
+                             for name, url, icon in nav_items], 
+                            cls="nav-pills")
+                    ),
+                    cls="nav-scroll-container"
+                ),
+                
+                # 3. Langue (à droite)
+                LangSwitcher(lang),
+                
+                cls="top-nav-bar"
+            ),
+            
+            # --- SECTION TITRE (HERO) ---
+            Div(
+                H1(t['hero_title'], cls="hero-title gradient-text"), 
+                style="text-align:center; padding: 1rem 0;"
+            )
         ),
+        
+        # Bannière Pub
         Div(P("Publicité", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
         
-        # Ici, on n'a que le contenu spécifique de la page
+        # Grille principale (Contenu + Sidebar)
         Div(
             Section(content), 
-            Aside(Div(P("Publicité"), style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; height:600px; display:flex; align-items:center; justify-content:center; position:sticky; top:20px;"), cls="sidebar"), 
+            Aside(
+                Div(P("Publicité"), 
+                    style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; height:600px; display:flex; align-items:center; justify-content:center; position:sticky; top:20px;"), 
+                cls="sidebar"
+            ), 
             cls="app-grid"
         ),
         
-        FooterSection(),
+        # Footer multilingue
+        FooterSection(lang=lang),
+        
+        # Scripts Lucide
         Script("lucide.createIcons();"), 
         cls="container"
     )
@@ -241,184 +273,36 @@ def generate_qr_response(data, filename):
     buf = BytesIO(); img.save(buf, format="PNG"); s = base64.b64encode(buf.getvalue()).decode()
     return Div(Img(src=f"data:image/png;base64,{s}", style="max-width:250px; margin: 1.5rem auto; border: 2px solid #f1f5f9; border-radius: 16px; display: block;"), A(Button("⬇️ Télécharger l'image PNG", cls="btn-full"), href=f"data:image/png;base64,{s}", download=filename), style="text-align:center; padding: 1.5rem; background: rgba(0,0,0,0.02); border-radius: 24px; margin-top: 2rem; border: 1px solid #e2e8f0;")
 
-def DataRow(prefix):
-    return Div(Input(name=f"{prefix}_keys", placeholder="Nom (ex: TikTok)"), Input(name=f"{prefix}_vals", placeholder="Lien URL"), Button(Safe('<i data-lucide="trash-2"></i>'), type="button", onclick="this.parentElement.remove()", style="width:40px; background:transparent !important; border:none;"), cls="key-value-row", style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-top:10px;")
-
-# --- ROUTES ACCUEIL ---
-
-@rt("/")
-def get():
-    # On affiche les 8 cartes de services
-    cards = Div(*[Card(
-        Div(Safe(f'<i data-lucide="{s[0]}" style="width:32px; color:var(--primary);"></i>'), H3(s[1], style="margin:0; font-size:1.1rem;"), cls="card-header-flex"),
-        P(s[2], style="font-size:0.9rem;"),
-        Footer(A(Button("Ouvrir l'outil", cls="btn-full"), href=s[3])), cls="modern-card"
-    ) for s in services], cls="services-grid")
-    
-    # On ajoute juste un petit titre SEO avant le footer uniquement sur l'accueil
-    content = Div(
-        cards,
-        H2("Solutions digitales pour Small Business", style="margin-top:4rem; text-align:center;"),
-        P("Accédez à nos tutoriels détaillés dans la page Guide pour optimiser vos ventes.", style="text-align:center; opacity:0.7;")
-    )
-    
-    return Layout(content, "Accueil")
-# --- OUTILS ---
-#social row
-def SocialRow():
-
+#datarow for barcode 
+def DataRow(prefix, lang='fr'):
+    t = I18N_PATTERNS[lang]['barcode']
     return Div(
-        # 1. Sélection du réseau
+        Input(name=f"{prefix}_keys", placeholder=t['ph_key'], maxlength="15"),
+        Input(name=f"{prefix}_vals", placeholder=t['ph_val'], maxlength="30", required=True),
+        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", 
+               onclick="this.parentElement.remove();", 
+               style="width:40px; background:transparent !important; border:none; color:#ef4444;"),
+        cls="key-value-row", 
+        style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-top:10px;"
+    )
+#social row
+def SocialRow(lang='fr'):
+    t = I18N_PATTERNS[lang]['common']
+    return Div(
+        # Le Select utilise la liste globale SOCIAL_NETWORKS
         Select(*[Option(label, value=val) for val, label in SOCIAL_NETWORKS], 
                name="social_networks", onchange="checkDuplicates()"),
         
-        # 2. Saisie de l'identifiant
-        Input(name="social_handles", placeholder="Lien URL ou @identifiant", required=True),
+        Input(name="social_handles", placeholder=t['placeholder_url'], required=True),
         
-        # 3. Bouton supprimer en bas (Full Width)
         Button(
-            Safe('<i data-lucide="trash-2" style="width:18px"></i> Supprimer ce réseau'), 
+            Safe(f'<i data-lucide="trash-2" style="width:18px"></i> {t["btn_remove"]}'), 
             type="button", 
             onclick="this.parentElement.remove(); checkDuplicates();", 
             cls="btn-remove-final"
         ),
-        
         cls="social-row"
     )
-
-@rt("/add-social-row")
-def get(): return SocialRow()
-
-@rt("/digital-id")
-def get():
-    js_logic = Script("""
-        function checkDuplicates() {
-            const selects = document.querySelectorAll('select[name="social_networks"]');
-            const selectedValues = Array.from(selects).map(s => s.value);
-            selects.forEach(select => {
-                const options = select.options;
-                for (let i = 0; i < options.length; i++) {
-                    const isSelectedElsewhere = selectedValues.filter(v => v === options[i].value).length > 1;
-                    options[i].disabled = (isSelectedElsewhere && options[i].value !== select.value);
-                }
-            });
-            if (window.lucide) lucide.createIcons();
-        }
-        document.body.addEventListener('htmx:afterSwap', checkDuplicates);
-    """)
-
-    content = Div(
-        H2("Votre Identité Digitale", cls="gradient-text"),
-        P("Centralisez tous vos réseaux. Sélectionnez une plateforme et ajoutez votre lien."),
-        Form(
-            # 1. ZONE DES INPUTS (Générée côté serveur immédiatement)
-            Div(SocialRow(), id="social-list"),
-            # 2. ZONE DES ACTIONS
-            Div(
-                Button("+ Ajouter un réseau", type="button", hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend", cls="outline"),
-                Button("🚀 Générer ma Social Card", type="submit", cls="btn-full"),
-                style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 2rem;"
-            ),
-            hx_post="/gen-id", hx_target="#id-out"
-        ),
-        Div(id="id-out"), js_logic, cls="modern-card"
-    )
-    return Layout(content, "Accueil")
-
-
-@rt("/gen-id", methods=["POST"])
-async def post(social_networks: list = None, social_handles: list = None):
-    nets = [social_networks] if isinstance(social_networks, str) else (social_networks or [])
-    hands = [social_handles] if isinstance(social_handles, str) else (social_handles or [])
-    
-    data_lines = ["MA PRÉSENCE DIGITALE :"]
-    seen_networks = set() # Pour doubler la sécurité côté serveur
-
-    for n, h in zip(nets, hands):
-        if h.strip() and n not in seen_networks:
-            data_lines.append(f"• {n}: {h.strip()}")
-            seen_networks.add(n)
-    
-    if len(data_lines) <= 1:
-        return P("Veuillez remplir au moins un réseau.", style="color:red; font-weight:bold;")
-
-    return generate_qr_response("\n".join(data_lines), "identite-digitale.png")
-
-@rt("/vcard")
-def get():
-    content = Div(
-        H2("Carte de Visite Digitale (VCard)", cls="gradient-text"),
-        P("Générez un QR Code qui enregistre vos coordonnées complètes dans le répertoire de vos clients et partenaires."),
-        
-        Form(
-            # --- BLOC : IDENTITÉ ---
-            Grid(
-                Div(Label("Prénom", Input(name="fn", placeholder="Ex: Jean"))),
-                Div(Label("Nom", Input(name="ln", placeholder="Ex: Dupont")))
-            ),
-            # --- BLOC : PROFESSIONNEL ---
-            Grid(
-                Div(Label("Boutique / Entreprise", Input(name="org", placeholder="Ex: RetailBox SARL"))),
-                Div(Label("Poste / Fonction", Input(name="title", placeholder="Ex: Gérant ou Consultant")))
-            ),
-            # --- BLOC : COORDONNÉES ---
-            Grid(
-                Div(Label("Téléphone", Input(name="tel", type="tel", placeholder="+33 6..."))),
-                Div(Label("E-mail Pro", Input(name="email", type="email", placeholder="contact@pro.com")))
-            ),
-            # --- BLOC : RÉSEAUX & ADRESSE ---
-            Grid(
-                Div(Label("LinkedIn (URL)", Input(name="linkedin", placeholder="linkedin.com/in/profil"))),
-                Div(Label("Site Web / Boutique", Input(name="url", type="url", placeholder="https://...")))
-            ),
-            Label("Adresse physique (pour GPS)", Input(name="adr", placeholder="Ex: 12 rue de la Paix, Paris")),
-
-            Button("🚀 Générer ma Carte Pro", cls="btn-full"),
-            hx_post="/gen-vcard", hx_target="#vcard-out"
-        ),
-        Div(id="vcard-out"),
-        cls="modern-card"
-    )
-    return Layout(content, "VCard")
-
-@rt("/gen-vcard", methods=["POST"])
-async def post(fn:str="", ln:str="", org:str="", title:str="", tel:str="", email:str="", url:str="", adr:str="", linkedin:str=""):
-    # Nettoyage simple du lien LinkedIn pour extraire l'identifiant si besoin
-    li_link = linkedin.strip()
-    if "linkedin.com/in/" in li_link:
-        # On s'assure que le lien est bien en https pour la compatibilité
-        if not li_link.startswith("http"): li_link = "https://" + li_link
-    
-    vcard_lines = [
-        "BEGIN:VCARD",
-        "VERSION:3.0",
-        f"FN:{fn} {ln}",
-        f"N:{ln};{fn};;;",
-        f"ORG:{org}",
-        f"TITLE:{title}",
-        f"TEL;TYPE=CELL,VOICE:{tel}",
-        f"EMAIL;TYPE=PREF,INTERNET:{email}",
-        f"URL;TYPE=Website:{url}",
-        f"ADR;TYPE=WORK:;;{adr};;;;",
-    ]
-    
-    if li_link:
-        # Champ standard pour les réseaux sociaux dans les répertoires modernes (iPhone/Android)
-        vcard_lines.append(f"X-SOCIALPROFILE;TYPE=linkedin:{li_link}")
-        # On le remet en NOTE pour être sûr que l'utilisateur le voit s'il n'apparaît pas dans les champs
-        vcard_lines.append(f"NOTE:Profil LinkedIn: {li_link}")
-
-    vcard_lines.append("END:VCARD")
-    vcard_data = "\n".join([line for line in vcard_lines if not line.endswith(":")])
-    
-    return generate_qr_response(vcard_data, "vcard-pro.png")
-@rt("/whatsapp-qr")
-def get():
-    content = Div(H2("QR WhatsApp"), Form(Input(name="n", placeholder="Numéro"), Button("Générer"), hx_post="/gen-wa", hx_target="#o"), Div(id="o"), cls="modern-card")
-    return Layout(content, "Accueil")
-
-@rt("/gen-wa", methods=["POST"])
-async def post(n:str): return generate_qr_response(f"https://wa.me/{n}", "wa.png")
 
 
 #soldes 
@@ -460,47 +344,319 @@ def generate_pdf_sheet(label_pil_img):
     buffer.seek(0)
     return buffer
 
-@rt("/soldes")
-def get():
+# --- ROUTES ACCUEIL ---
+
+@rt("/")
+def get(session):
+    # 1. Détection de la langue
+    lang = session.get('lang', 'fr')
+    t = MULTILINGUAL_DATA_Services[lang]
+    
+    # 2. Génération dynamique des 9 cartes à partir de la liste 'services'
+    cards_html = Div(*[
+        Card(
+            # En-tête : Icône + Titre alignés (32px comme demandé)
+            Div(
+                Safe(f'<i data-lucide="{s["icon"]}" style="width:32px; height:32px; color:var(--primary);"></i>'), 
+                H3(s["title"], style="margin:0; font-size:1.1rem;"), 
+                cls="card-header-flex"
+            ),
+            # Description traduisible
+            P(s["desc"], style="font-size:0.9rem;"),
+            # Pied de carte : Bouton Full-Width
+            Footer(
+                A(Button(t['btn_open'], cls="btn-full"), href=s["link"])
+            ), 
+            cls="modern-card"
+        ) for s in t['services']
+    ], cls="services-grid")
+    
+    # 3. Assemblage du contenu de la page
     content = Div(
-        H2("Générateur d'Étiquettes & Planches A4", cls="gradient-text"),
-        P("""Créez vos étiquettes de soldes avec prix barrés. 
-          Le système génère une image haute définition et une planche PDF A4 (24 étiquettes) 
-          prête pour vos planches d'autocollants standards."""),
+        cards_html,
+        
+        # Section SEO avant le footer
+        H2(t['home_title'], style="margin-top:4rem; text-align:center;"),
+        P(t['home_sub'], style="text-align:center; opacity:0.7;")
+    )
+    
+    return Layout(content, "Accueil" if lang == 'fr' else "Home", session)
+
+#about 
+
+@rt("/about")
+def get(session):
+    # Récupération de la langue (fr par défaut)
+    lang = session.get('lang', 'fr')
+    d = ABOUT_DATA[lang]
+    
+    content = Div(
+        H2(d['title'], cls="gradient-text"),
+        P(d['intro']),
+        
+        H4(d['mission_h']),
+        P(d['mission_p']),
+        
+        Grid(
+            Div(H5(d['stock_h']), P(d['stock_p'])),
+            Div(H5(d['restau_h']), P(d['restau_p']))
+        ),
+        
+        Grid(
+            Div(H5(d['id_h']), P(d['id_p'])),
+            Div(H5(d['prod_h']), P(d['prod_p']))
+        ),
+        
+        H4(d['privacy_h']),
+        P(d['privacy_p']),
+        
+        cls="modern-card", 
+        style="max-width: 900px; margin: auto; padding: 3rem; line-height: 1.8;"
+    )
+    
+    # On passe bien la session au Layout pour le menu
+    return Layout(content, "À Propos" if lang == 'fr' else "About", session)
+# --- OUTILS ---
+#digital id 
+@rt("/add-social-row")
+def get(session):
+    lang = session.get('lang', 'fr')
+    return SocialRow(lang)
+
+@rt("/digital-id")
+def get(session):
+    lang = session.get('lang', 'fr')
+    t_common = I18N_PATTERNS[lang]['common']
+    t_spec = I18N_PATTERNS[lang]['social']
+
+    js_logic = Script("""
+        function checkDuplicates() {
+            const selects = document.querySelectorAll('select[name="social_networks"]');
+            const selectedValues = Array.from(selects).map(s => s.value);
+            selects.forEach(select => {
+                const options = select.options;
+                for (let i = 0; i < options.length; i++) {
+                    const isSelectedElsewhere = selectedValues.filter(v => v === options[i].value).length > 1;
+                    options[i].disabled = (isSelectedElsewhere && options[i].value !== select.value);
+                }
+            });
+            if (window.lucide) lucide.createIcons();
+        }
+        document.body.addEventListener('htmx:afterSwap', checkDuplicates);
+    """)
+
+    content = Div(
+        H2(t_spec['title'], cls="gradient-text"),
+        P(t_spec['sub']),
+        Form(
+            # 1. ZONE DES INPUTS (Ligne initiale générée avec la bonne langue)
+            Div(SocialRow(lang), id="social-list"),
+            
+            # 2. ZONE DES ACTIONS
+            Div(
+                Button(t_common['btn_add'], type="button", 
+                       hx_get="/add-social-row", hx_target="#social-list", hx_swap="beforeend", cls="outline"),
+                
+                Button(t_spec['title'], type="submit", cls="btn-full"), # On réutilise le titre pour le bouton
+                
+                style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 2rem;"
+            ),
+            hx_post="/gen-id", hx_target="#id-out"
+        ),
+        Div(id="id-out"), js_logic, cls="modern-card"
+    )
+    return Layout(content, t_spec['title'], session)
+@rt("/gen-id", methods=["POST"])
+async def post(session, social_networks: list = None, social_handles: list = None):
+    lang = session.get('lang', 'fr')
+    t_common = I18N_PATTERNS[lang]['common']
+    t_spec = I18N_PATTERNS[lang]['social']
+    
+    nets = [social_networks] if isinstance(social_networks, str) else (social_networks or [])
+    hands = [social_handles] if isinstance(social_handles, str) else (social_handles or [])
+    
+    data_lines = [t_spec['qr_header']]
+    seen_networks = set()
+
+    for n, h in zip(nets, hands):
+        if h.strip() and n not in seen_networks:
+            data_lines.append(f"• {n}: {h.strip()}")
+            seen_networks.add(n)
+    
+    if len(data_lines) <= 1:
+        return P(t_common['error_empty'], style="color:red; font-weight:bold;")
+
+    # On utilise ta fonction generate_qr_response stable
+    return generate_qr_response("\n".join(data_lines), t_spec['filename'])
+#vcard
+@rt("/vcard")
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['vcard']
+    
+    content = Div(
+        H2(t['title'], cls="gradient-text"),
+        P(t['sub']),
         
         Form(
-            Label("Nom du produit / Référence", 
-                  Input(name="item", placeholder="Ex: Chemise Lin Bleu", required=True)),
+            # --- BLOC : IDENTITÉ ---
+            Grid(
+                Div(Label(t['fn'], Input(name="fn", placeholder="Ex: Jean" if lang=='fr' else "Ex: John"))),
+                Div(Label(t['ln'], Input(name="ln", placeholder="Ex: Dupont" if lang=='fr' else "Ex: Doe")))
+            ),
+            # --- BLOC : PROFESSIONNEL ---
+            Grid(
+                Div(Label(t['org'], Input(name="org", placeholder="Ex: RetailBox SARL"))),
+                Div(Label(t['job'], Input(name="title", placeholder="Ex: Gérant" if lang=='fr' else "Ex: Manager")))
+            ),
+            # --- BLOC : COORDONNÉES ---
+            Grid(
+                Div(Label(t['tel'], Input(name="tel", type="tel", placeholder="+33..."))),
+                Div(Label(t['email'], Input(name="email", type="email", placeholder="contact@pro.com")))
+            ),
+            # --- BLOC : RÉSEAUX & ADRESSE ---
+            Grid(
+                Div(Label(t['li'], Input(name="linkedin", placeholder="linkedin.com/in/..."))),
+                Div(Label(t['web'], Input(name="url", type="url", placeholder="https://...")))
+            ),
+            Label(t['adr'], Input(name="adr", placeholder="Ex: 12 rue de la Paix, Paris")),
+
+            Button(t['btn'], cls="btn-full", type="submit"),
+            hx_post="/gen-vcard", hx_target="#vcard-out"
+        ),
+        Div(id="vcard-out"),
+        cls="modern-card"
+    )
+    return Layout(content, t['title'], session)
+
+@rt("/gen-vcard", methods=["POST"])
+async def post(session, fn:str="", ln:str="", org:str="", title:str="", tel:str="", email:str="", url:str="", adr:str="", linkedin:str=""):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['vcard']
+    
+    # Nettoyage LinkedIn pour compatibilité mobile
+    li_link = linkedin.strip()
+    if li_link and "linkedin.com" in li_link and not li_link.startswith("http"):
+        li_link = "https://" + li_link
+    
+    # Construction du format VCard 3.0
+    vcard_lines = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        f"FN:{fn} {ln}",
+        f"N:{ln};{fn};;;",
+        f"ORG:{org}",
+        f"TITLE:{title}",
+        f"TEL;TYPE=CELL,VOICE:{tel}",
+        f"EMAIL;TYPE=PREF,INTERNET:{email}",
+        f"URL:{url}",
+        f"ADR;TYPE=WORK:;;{adr};;;;",
+    ]
+    
+    if li_link:
+        # Ajout du profil social (reconnu par iOS/Android moderne)
+        vcard_lines.append(f"X-SOCIALPROFILE;TYPE=linkedin:{li_link}")
+        vcard_lines.append(f"NOTE:LinkedIn: {li_link}")
+
+    vcard_lines.append("END:VCARD")
+    
+    # On filtre les lignes vides pour éviter un QR trop dense
+    final_data = "\n".join([line for line in vcard_lines if not line.strip().endswith(":")])
+    
+    return generate_qr_response(final_data, t['filename'])
+
+#whatsapp
+@rt("/whatsapp-qr")
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['whatsapp']
+    
+    content = Div(
+        H2(t['title'], cls="gradient-text"),
+        P(t['sub']),
+        
+        Form(
+            Label(t['label_tel'], 
+                  Input(name="phone", placeholder=t['ph_tel'], required=True, type="tel")),
+            
+            Label(t['label_msg'], 
+                  Textarea(name="msg", placeholder=t['ph_msg'], rows=3)),
+            
+            P("Note : N'ajoutez pas de '+' ou de '00' au début du numéro.", 
+              style="font-size:0.8rem; opacity:0.6; margin-top:-10px;"),
+
+            Button(t['btn'], cls="btn-full", type="submit"),
+            hx_post="/gen-wa", hx_target="#wa-out"
+        ),
+        Div(id="wa-out"),
+        cls="modern-card"
+    )
+    return Layout(content, t['title'], session)
+
+
+
+
+@rt("/gen-wa", methods=["POST"])
+async def post(session, phone:str, msg:str=""):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['whatsapp']
+    
+    # 1. Nettoyage du numéro de téléphone
+    clean_phone = "".join(filter(str.isdigit, phone))
+    
+    # 2. Encodage du message pour l'URL
+    encoded_msg = urllib.parse.quote(msg.strip())
+    
+    # 3. Construction du lien de l'API WhatsApp
+    wa_link = f"https://wa.me/{clean_phone}"
+    if encoded_msg:
+        wa_link += f"?text={encoded_msg}"
+    
+    # 4. Appel de ta fonction stable de génération
+    return generate_qr_response(wa_link, t['filename'])
+
+@rt("/soldes")
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['soldes']
+    
+    content = Div(
+        H2(t['title'], cls="gradient-text"),
+        P(t['sub']),
+        
+        Form(
+            Label(t['label_item'], 
+                  Input(name="item", placeholder=t['ph_item'], required=True)),
             
             Grid(
-                Div(Label("Prix d'origine (€)", Input(name="old_p", placeholder="Ex: 59", type="number", step="0.01"))),
-                Div(Label("Prix soldé (€)", Input(name="new_p", placeholder="Ex: 39", type="number", step="0.01")))
+                Div(Label(t['label_old'], Input(name="old_p", placeholder="Ex: 59", type="number", step="0.01"))),
+                Div(Label(t['label_new'], Input(name="new_p", placeholder="Ex: 39", type="number", step="0.01")))
             ),
             
-            Label("Code-barres EAN-13 (12 chiffres)", 
-                  Input(name="code", placeholder="Ex: 366123456789", required=True)),
+            Label(t['label_code'], 
+                  Input(name="code", placeholder="366123456789", required=True, maxlength="12")),
             
-            Button("🚀 Créer l'image et la Planche PDF", type="submit", cls="btn-full"),
+            Button(t['btn'], type="submit", cls="btn-full"),
             
             hx_post="/gen-soldes", 
             hx_target="#soldes-result",
             hx_indicator="#loading-soldes"
         ),
         
-        # Indicateur de chargement car la génération PDF prend 1 seconde
         Div(id="loading-soldes", cls="htmx-indicator", aria_busy="true", style="text-align:center; margin-top:1rem;"),
-        
-        # Zone de résultat
         Div(id="soldes-result"),
         
         cls="modern-card"
     )
-    return Layout(content, "Accueil") # On garde "Accueil" car c'est un service de la grille
+    return Layout(content, t['title'], session)
 
 @rt("/gen-soldes", methods=["POST"])
-async def post(item:str, old_p:str, new_p:str, code:str):
+async def post(session, item:str, old_p:str, new_p:str, code:str):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['soldes']
+    
     try:
-        # --- 1. GÉNÉRATION DE L'IMAGE DE BASE (Ton code actuel) ---
+        # --- 1. GÉNÉRATION DE L'IMAGE (Logic intacte) ---
         bc_class = barcode.get_barcode_class('ean13')
         buf_bc = BytesIO()
         bc_class(code, writer=ImageWriter()).write(buf_bc)
@@ -508,57 +664,51 @@ async def post(item:str, old_p:str, new_p:str, code:str):
         
         tag = Image.new('RGB', (400, 400), color='white')
         d = ImageDraw.Draw(tag)
-        d.text((20, 20), f"{item}", fill="black")
+        d.text((20, 20), f"{item[:25]}", fill="black")
         d.text((20, 60), f"{old_p}€", fill="red")
         d.line((15, 75, 100, 75), fill="red", width=3)
         d.text((20, 100), f"{new_p}€", fill="black")
         tag.paste(bc_img, (50, 200))
 
-        # --- 2. CRÉATION DU PDF (Le mode Planche) ---
+        # --- 2. CRÉATION DU PDF PLANCHE ---
+        # On utilise ta fonction generate_pdf_sheet définie précédemment
         pdf_buffer = generate_pdf_sheet(tag)
         pdf_base64 = base64.b64encode(pdf_buffer.read()).decode()
 
-        # --- 3. RENDU HTML ---
+        # --- 3. RENDU HTML TRADUIT ---
         buf_f = BytesIO()
         tag.save(buf_f, format="PNG")
         img_s = base64.b64encode(buf_f.getvalue()).decode()
         
         return Div(
-            H4("Aperçu de l'étiquette :"),
-            Img(src=f"data:image/png;base64,{img_s}", style="max-width:200px; border:1px solid #ccc;"),
+            H4(t['preview']),
+            Img(src=f"data:image/png;base64,{img_s}", style="max-width:200px; border:1px solid #ccc; margin:auto;"),
             Grid(
-                A(Button("⬇️ Télécharger l'image seule", cls="outline"), 
+                A(Button(t['dl_png'], cls="outline"), 
                   href=f"data:image/png;base64,{img_s}", download="etiquette.png"),
                 
-                A(Button("📄 Télécharger Planche A4 (24 PDF)", cls="btn-full"), 
-                  href=f"data:application/pdf;base64,{pdf_base64}", download="planche-etiquettes.pdf")
+                A(Button(t['dl_pdf'], cls="btn-full"), 
+                  href=f"data:application/pdf;base64,{pdf_base64}", download="planche-retailbox.pdf")
             ),
-            style="text-align:center; padding:1rem;"
+            style="text-align:center; padding:1.5rem; background: rgba(0,0,0,0.02); border-radius:24px; margin-top:2rem;"
         )
     except:
-        return P("Erreur : Vérifiez que le code a 12 chiffres.", style="color:red")
+        return P(t['error'], style="color:red; font-weight:bold;")
 
-def DataRow(prefix):
-    return Div(
-        Input(name=f"{prefix}_keys", placeholder="Clé (ex: SKU)", maxlength="15"),
-        Input(name=f"{prefix}_vals", placeholder="Valeur", maxlength="30", required=True),
-        Button(Safe('<i data-lucide="trash-2"></i>'), type="button", 
-               onclick="this.parentElement.remove(); checkDuplicates();", 
-               style="width:40px; background:transparent !important; border:none; color:#ef4444;"),
-        cls="key-value-row", 
-        style="display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-top:10px;"
-    )
 
 @rt("/barcode-tab")
-def get():
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['barcode']
+    
     content = Div(
-        H2("Générateur de Barcode Expert"),
-        P("Saisissez vos données ou créez une fiche technique pour votre inventaire."),
+        H2(t['title'], cls="gradient-text"),
+        P(t['sub']),
         Form(
-            Label("Format du code-barres",
+            Label(t['label_format'],
                 Select(
-                    Option("EAN-13 (Standard Commerce)", value="ean13"),
-                    Option("Code 128 (Logistique / Données)", value="code128", selected=True),
+                    Option(t['opt_ean'], value="ean13"),
+                    Option(t['opt_128'], value="code128", selected=True),
                     name="t", 
                     hx_get="/bc-f", 
                     hx_target="#f",
@@ -566,198 +716,282 @@ def get():
                 )
             ),
             Div(id="f", style="margin-bottom:20px;"),
-            Button("🚀 Générer le Code-barres", cls="btn-full"),
+            Button(t['btn_gen'], cls="btn-full", type="submit"),
             hx_post="/gen-bc", hx_target="#o"
         ),
         Div(id="o"),
         cls="modern-card"
     )
-    return Layout(content, "Barcode")
+    return Layout(content, "Barcode", session)
 
 @rt("/bc-f")
-def get(t:str):
+def get(session, t:str):
+    lang = session.get('lang', 'fr')
+    p = I18N_PATTERNS[lang]['barcode']
+    
     if t == "ean13":
         return Div(
-            Input(name="d", 
-                  placeholder="Entrez 12 chiffres", 
-                  required=True,
-                  maxlength="12",        # Limite physique à 12 caractères
-                  minlength="12",        # Oblige à avoir 12 caractères
-                  pattern="[0-9]{12}",   # Force uniquement des chiffres
-                  title="Veuillez entrer exactement 12 chiffres numériques",
-                  # Petit hack JS pour empêcher de taper autre chose que des chiffres
+            Input(name="d", placeholder=p['ph_ean'], required=True,
+                  maxlength="12", minlength="12", pattern="[0-9]{12}",
                   oninput="this.value = this.value.replace(/[^0-9]/g, '');"),
-            P("Le 13ème chiffre de contrôle sera calculé automatiquement.", 
-              style="font-size:0.8rem; opacity:0.7; margin-top:5px;")
+            P(p['ean_info'], style="font-size:0.8rem; opacity:0.7; margin-top:5px;")
         )
     
-    # Mode Key-Value pour Code 128
     return Div(
-        Div(DataRow("bc"), id="bc-kv-list"),
-        Button("+ Ajouter une donnée", type="button", 
+        Div(DataRow("bc", lang), id="bc-kv-list"),
+        Button(p['btn_add'], type="button", 
                hx_get="/add-bc-row", hx_target="#bc-kv-list", hx_swap="beforeend",
                cls="outline secondary", style="width:100%; margin-top:10px;"),
         id="bc-kv-container"
     )
+
 @rt("/add-bc-row")
-def get(): return DataRow("bc")
+def get(session): 
+    return DataRow("bc", session.get('lang', 'fr'))
 
 
 @rt("/gen-bc", methods=["POST"])
-async def post(t:str, d:str=None, bc_keys:list=None, bc_vals:list=None):
+async def post(session, t:str, d:str=None, bc_keys:list=None, bc_vals:list=None):
+    lang = session.get('lang', 'fr')
+    p = I18N_PATTERNS[lang]['barcode']
+    
     try:
         final_data = ""
         if t == "ean13":
             final_data = d.strip()
-            # Validation stricte côté serveur
             if not final_data.isdigit() or len(final_data) != 12:
-                return P("Erreur : EAN-13 nécessite exactement 12 chiffres.", 
-                         style="color:red; font-weight:bold; border:1px solid red; padding:10px; border-radius:10px;")
+                return P(p['err_ean'], style="color:red; font-weight:bold; border:1px solid red; padding:10px; border-radius:10px;")
         else:
-            # Code 128
             keys = [bc_keys] if isinstance(bc_keys, str) else (bc_keys or [])
             vals = [bc_vals] if isinstance(bc_vals, str) else (bc_vals or [])
             pairs = [f"{k}:{v}" for k, v in zip(keys, vals) if k and k.strip()]
             final_data = " ".join(pairs)
             
-            if not final_data: 
-                return P("Erreur : Veuillez saisir au moins une donnée.", style="color:red;")
-            
-            # Limite de sécurité pour la lisibilité du Code 128
-            if len(final_data) > 60:
-                return P("Erreur : Trop de données. Le code-barres serait illisible.", style="color:red;")
+            if not final_data: return P(p['err_empty'], style="color:red;")
+            if len(final_data) > 60: return P(p['err_long'], style="color:red;")
 
-        # Génération
+        # Génération de l'image
         bc_class = barcode.get_barcode_class(t)
         buf = BytesIO()
         bc_class(final_data, writer=ImageWriter()).write(buf)
         s = base64.b64encode(buf.getvalue()).decode()
         
         return Div(
-            Img(src=f"data:image/png;base64,{s}", style="max-width:100%; border:1px solid #e2e8f0; border-radius:10px;"),
-            P(f"Données encodées : {final_data}", style="font-size:0.8rem; margin-top:0.5rem; font-family:monospace;"),
-            A(Button("⬇️ Télécharger Barcode", cls="btn-full"), href=f"data:image/png;base64,{s}", download="barcode-retailbox.png"),
+            Img(src=f"data:image/png;base64,{s}", style="max-width:100%; border:1px solid #e2e8f0; border-radius:10px; background: white;"),
+            P(f"{p['encoded']} {final_data}", style="font-size:0.8rem; margin-top:0.5rem; font-family:monospace;"),
+            A(Button(p['dl'], cls="btn-full"), href=f"data:image/png;base64,{s}", download="barcode-retailbox.png"),
             style="text-align:center; padding-top:1.5rem;"
         )
     except Exception as e:
-        return P(f"Erreur de format : {str(e)}", style="color:red; font-weight:bold;")
+        return P(f"Error: {str(e)}", style="color:red; font-weight:bold;")
     
+#rembg
 @rt("/rembg-tab")
-def get():
-    content = Div(H2("Détourage IA"), Form(Input(type="file", name="i", accept="image/*"), Button("Lancer l'IA"), hx_post="/gen-bg", hx_target="#o", hx_indicator="#l", enctype="multipart/form-data"), Div(id="l", cls="htmx-indicator", aria_busy="true"), Div(id="o"), cls="modern-card")
-    return Layout(content, "RemBg")
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['rembg']
+    
+    content = Div(
+        H2(t['title'], cls="gradient-text"),
+        P(t['sub']),
+        
+        Form(
+            Label(t['label_file'], 
+                  Input(type="file", name="image", accept="image/*", required=True)),
+            
+            Button(t['btn_run'], type="submit", cls="btn-full"),
+            
+            hx_post="/gen-bg", 
+            hx_target="#rembg-result",
+            hx_indicator="#loading-ai",
+            enctype="multipart/form-data"
+        ),
+        
+        # Indicateur de chargement stylisé
+        Div(id="loading-ai", cls="htmx-indicator", aria_busy="true", 
+            style="text-align:center; margin-top:1.5rem;"),
+        
+        # Zone de résultat
+        Div(id="rembg-result"),
+        
+        cls="modern-card"
+    )
+    return Layout(content, "RemBg", session)
 
 @rt("/gen-bg", methods=["POST"])
-async def post(i:UploadFile):
-    res = remove(await i.read()); s = base64.b64encode(res).decode()
-    return Div(Img(src=f"data:image/png;base64,{s}"), A(Button("⬇️ Télécharger"), href=f"data:image/png;base64,{s}", download="nobg.png"))
+async def post(session, image: UploadFile):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['rembg']
+    
+    try:
+        # 1. Lecture et traitement IA
+        input_data = await image.read()
+        output_data = remove(input_data)
+        
+        # 2. Encodage Base64
+        s = base64.b64encode(output_data).decode()
+        
+        # 3. Rendu HTML avec boutons larges et visibilité iPhone
+        return Div(
+            H4(t['success'], style="margin-top:2rem;"),
+            # Aperçu de l'image détourée
+            Img(src=f"data:image/png;base64,{s}", 
+                style="max-width:100%; border: 2px solid #e2e8f0; border-radius:16px; background: white; margin: 1rem auto; display: block;"),
+            
+            # Bouton de téléchargement Full-Width
+            A(Button(t['dl_btn'], cls="btn-full"), 
+              href=f"data:image/png;base64,{s}", 
+              download=t['filename']),
+            
+            style="text-align:center; padding:1.5rem; background: rgba(0,0,0,0.02); border-radius:24px; margin-top:2rem;"
+        )
+    except Exception as e:
+        return P(f"Erreur : {str(e)}", style="color:red; font-weight:bold;")
+    
 
+
+
+#qrcode
 @rt("/qr-tab")
-def get():
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['qr']
+    
     content = Div(
-        H2("Générateur QR Code Pro"),
-        P("Personnalisez votre QR Code pour vos menus, boutiques ou réseaux sociaux."),
+        H2(t['title'], cls="gradient-text"),
+        P(t['sub']),
         Form(
-            Label("Type de contenu", 
+            Label(t['label_type'], 
                 Select(
-                    Option("Lien URL Simple", value="url", selected=True), 
-                    Option("Fiche de données (Clé:Valeur)", value="kv"), 
+                    Option(t['opt_url'], value="url", selected=True), 
+                    Option(t['opt_kv'], value="kv"), 
                     name="qr_mode", 
                     hx_get="/qr-fields", 
                     hx_target="#qr-inputs",
                     hx_trigger="load, change"
                 )
             ),
-            # Les champs (URL ou KV) s'injectent ici
+            # Injection dynamique
             Div(id="qr-inputs", style="margin-bottom:20px;"),
             
-            # Grille de couleurs avec labels explicites
+            # Grille de couleurs
             Grid(
-                Div(Label("Couleur du QR", Input(type="color", name="fc", value="#000000"))),
-                Div(Label("Couleur du Fond", Input(type="color", name="bc", value="#ffffff")))
+                Div(Label(t['label_fc'], Input(type="color", name="fc", value="#000000"))),
+                Div(Label(t['label_bc'], Input(type="color", name="bc", value="#ffffff")))
             ),
             
-            Label("Logo central (PNG ou JPG)", Input(type="file", name="logo", accept="image/*")),
+            Label(t['label_logo'], Input(type="file", name="logo", accept="image/*")),
             
-            Button("🚀 Générer le QR Code", cls="btn-full"),
+            Button(t['btn_gen'], cls="btn-full", type="submit"),
             hx_post="/gen-qr", hx_target="#qr-result", enctype="multipart/form-data"
         ),
         Div(id="qr-result"),
         cls="modern-card"
     )
-    return Layout(content, "QR Pro")
+    return Layout(content, "QR Pro", session)
 
 @rt("/qr-fields")
-def get(qr_mode:str):
-    if qr_mode == "url":
-        return Input(name="url", placeholder="Entrez le lien (ex: https://...)", required=True)
+def get(session, qr_mode:str):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['qr']
+    t_common = I18N_PATTERNS[lang]['common']
     
-    # Mode Key-Value
+    if qr_mode == "url":
+        return Input(name="url", placeholder=t['ph_url'], required=True)
+    
     return Div(
-        Div(DataRow("qr"), id="qr-kv-list"),
-        Button("+ Ajouter une information", type="button", 
+        Div(DataRow("qr", lang), id="qr-kv-list"),
+        Button(t_common['btn_add'], type="button", 
                hx_get="/add-qr-row", hx_target="#qr-kv-list", hx_swap="beforeend",
                cls="outline secondary", style="width:100%; margin-top:10px;"),
         id="qr-kv-container"
     )
 
 @rt("/add-qr-row")
-def get(): return DataRow("qr")
-
+def get(session): 
+    return DataRow("qr", session.get('lang', 'fr'))
 
 @rt("/gen-qr", methods=["POST"])
-async def post(qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=None, qr_vals:list=None, logo:UploadFile=None):
+async def post(session, qr_mode:str, fc:str, bc:str, url:str=None, qr_keys:list=None, qr_vals:list=None, logo:UploadFile=None):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['qr']
+    
     try:
-        # 1. Construction des données
+        # 1. Préparation des données
         if qr_mode == "url":
             final_data = url.strip() if url else ""
         else:
-            # Normalisation des listes (FastHTML envoie str si 1 ligne, list si plusieurs)
             keys = [qr_keys] if isinstance(qr_keys, str) else (qr_keys or [])
             vals = [qr_vals] if isinstance(qr_vals, str) else (qr_vals or [])
-            # Filtrage et assemblage
             lines = [f"{k}: {v}" for k, v in zip(keys, vals) if k and k.strip()]
             final_data = "\n".join(lines)
 
         if not final_data: 
-            return P("Erreur : Aucune donnée saisie.", style="color:red; font-weight:bold;")
+            return P(t['err_empty'], style="color:red; font-weight:bold;")
 
-        # 2. Création du QR Code
+        # 2. Création du QR Code (High Correction pour le logo)
         qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
         qr.add_data(final_data)
         qr.make(fit=True)
         img = qr.make_image(fill_color=fc, back_color=bc).convert('RGB')
         
-        # 3. Ajout du Logo si présent
+        # 3. Traitement du Logo
         if logo and logo.size > 0:
             log_img = Image.open(BytesIO(await logo.read()))
-            # Redimensionnement intelligent du logo (max 25% de la taille du QR)
-            size_ratio = 4 
-            logo_size = img.size[0] // size_ratio
+            # Redimensionnement (max 20% de la surface)
+            logo_size = img.size[0] // 5
             log_img.thumbnail((logo_size, logo_size), Image.LANCZOS)
-            # Centrage
             pos = ((img.size[0] - log_img.size[0]) // 2, (img.size[1] - log_img.size[1]) // 2)
             img.paste(log_img, pos)
             
-        # 4. Envoi de la réponse
+        # 4. Conversion et Rendu
         buf = BytesIO()
         img.save(buf, format="PNG")
         s = base64.b64encode(buf.getvalue()).decode()
         
         return Div(
             Img(src=f"data:image/png;base64,{s}", 
-                style="max-width:250px; margin: 2rem auto; border: 2px solid #e2e8f0; border-radius:16px; display:block;"),
-            A(Button("⬇️ Télécharger le QR Code PNG", cls="btn-full"), 
-              href=f"data:image/png;base64,{s}", download="qrcode-retailbox.png"),
+                style="max-width:250px; margin: 2rem auto; border: 2px solid #e2e8f0; border-radius:16px; display:block; background: white;"),
+            A(Button(t['dl_btn'], cls="btn-full"), 
+              href=f"data:image/png;base64,{s}", download=t['filename']),
             style="text-align:center; padding-top:1.5rem;"
         )
     except Exception as e:
-        return P(f"Erreur technique : {str(e)}", style="color:red;")
+        return P(f"Error: {str(e)}", style="color:red;")
 
+#wifi qr 
 @rt("/wifi-qr")
-def get():
-    content = Div(H2("QR Wi-Fi"), Form(Input(name="s", placeholder="SSID"), Button("Générer"), hx_post="/gen-wifi", hx_target="#o"), Div(id="o"), cls="modern-card")
-    return Layout(content, "Accueil")
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['wifi']
+    
+    content = Div(
+        H2(t['title'], cls="gradient-text"),
+        P(t['sub']),
+        
+        Form(
+            Label(t['label_ssid'], 
+                  Input(name="ssid", placeholder=t['ph_ssid'], required=True)),
+            
+            Grid(
+                Div(Label(t['label_pass'], 
+                          Input(name="password", type="password", placeholder=t['ph_pass']))),
+                Div(Label(t['label_type'], 
+                          Select(Option("WPA/WPA2", value="WPA"), 
+                                 Option("WEP", value="WEP"), 
+                                 Option("Aucune (Ouvert)", value="nopass"), 
+                                 name="encryption")))
+            ),
+            
+            P(t['tip'], style="font-size:0.85rem; opacity:0.7; margin-top:10px;"),
+
+            Button(t['btn'], cls="btn-full", type="submit"),
+            hx_post="/gen-wifi", hx_target="#wifi-out"
+        ),
+        Div(id="wifi-out"),
+        cls="modern-card"
+    )
+    return Layout(content, "Wi-Fi", session)
 
 # --- ROUTE : PAGE DU FORMULAIRE ---
 @rt("/shortener")
@@ -787,44 +1021,73 @@ def get():
     )
     return Layout(content, "Shortener")
 
+@rt("/gen-wifi", methods=["POST"])
+async def post(session, ssid:str, password:str="", encryption:str="WPA"):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['wifi']
+    
+    # Construction du format standard Wi-Fi QR
+    # WIFI:T:WPA;S:mon_reseau;P:mon_mdp;;
+    if encryption == "nopass":
+        wifi_data = f"WIFI:S:{ssid};T:;P:;;"
+    else:
+        wifi_data = f"WIFI:T:{encryption};S:{ssid};P:{password};;"
+    
+    # Appel de la fonction universelle de génération
+    return generate_qr_response(wifi_data, t['filename'])
 
 # --- ROUTE : LOGIQUE DE GÉNÉRATION ---
 @rt("/gen-short", methods=["POST"])
-async def post(url: str, custom_code: str):
-    if not supabase: return P("❌ Erreur : Connexion à la base de données impossible.", style="color:red;")
+async def post(session, url: str, custom_code: str):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['shortener']
+    
+    if not supabase: return P(t['err_db'], style="color:red;")
 
-    # 1. Définition du code (Priorité au custom, sinon aléatoire 4 car.)
+    # 1. Définition du code
     if custom_code and custom_code.strip():
         code = custom_code.strip().lower()
-        # Vérification d'unicité dans Supabase
         check = supabase.table("links").select("short_code").eq("short_code", code).execute()
         if check.data:
-            return Div(P(f"❌ L'alias '{code}' est déjà utilisé par un autre commerçant. Choisissez un autre nom.", 
-                         style="color:red; font-weight:bold;"), cls="modern-card", style="border-color:red;")
+            return Div(P(t['err_taken'], style="color:red; font-weight:bold;"), cls="modern-card", style="border-color:red;")
     else:
-        # Code aléatoire court (4 caractères suffisent pour des millions de combinaisons)
         code = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
 
-    # 2. Sauvegarde dans Supabase
+    # 2. Sauvegarde Supabase
     try:
         supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
     except Exception as e:
-        return P(f"Erreur technique Supabase : {e}", style="color:red;")
+        return P(f"Erreur : {e}", style="color:red;")
 
-    # 3. CONSTRUCTION DE L'URL OFFICIELLE (Ton nouveau domaine Vercel)
+    # 3. Construction du lien pro
     direct_domain = "rtbx.space"
     short_link = f"https://{direct_domain}/s/{code}"
     
+    # 4. Génération du QR Code pour ce lien court (pour le tracking)
+    qr = qrcode.make(short_link)
+    buf = BytesIO(); qr.save(buf, format="PNG")
+    qr_s = base64.b64encode(buf.getvalue()).decode()
+
     return Div(
-        H4("✅ Votre RetailLink est prêt !"),
-        # Champ optimisé pour la lecture et la copie
+        H4(t['res_title']),
+        
+        # Affichage du lien court
         Input(value=short_link, readonly=True, id="shortlink-res",
               style="text-align:center; font-weight:800; color:var(--primary); font-size:1.2rem; border:2px solid var(--primary); background:#fff;"),
         
-        Grid(
-            Button("📋 Copier le lien", onclick="copyToClipboard()", cls="btn-full"),
-            A(Button("📊 Voir les stats", cls="outline"), href=f"/stats/{code}")
+        # Affichage du QR Code automatique
+        Div(
+            Img(src=f"data:image/png;base64,{qr_s}", style="max-width:180px; margin: 1.5rem auto; border: 4px solid white; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"),
+            P(t['qr_info'], style="font-size:0.8rem; opacity:0.7;"),
+            style="text-align:center;"
         ),
+        
+        # Boutons d'actions
+        Grid(
+            Button(t['copy_btn'], onclick="copyToClipboard()", cls="btn-full"),
+            A(Button(t['dl_qr'], cls="outline"), href=f"data:image/png;base64,{qr_s}", download=f"qr-{code}.png")
+        ),
+        A(Button(t['stats_btn'], cls="outline", style="width:100%; margin-top:10px;"), href=f"/stats/{code}"),
         
         Script("""
             function copyToClipboard() {
@@ -832,137 +1095,156 @@ async def post(url: str, custom_code: str):
                 copyText.select();
                 copyText.setSelectionRange(0, 99999);
                 navigator.clipboard.writeText(copyText.value);
-                alert("Lien rtbx.space copié !");
+                alert("Lien copié !");
             }
         """),
         style="text-align:center; margin-top:2rem; padding:2rem; background:rgba(79, 70, 229, 0.05); border-radius:24px; border: 1px solid var(--primary);"
     )
 
-# --- ROUTE : REDIRECTION FALLBACK (Hugging Face) ---
-# Si quelqu'un utilise l'URL .hf.space/s/code au lieu de rtbx.space
-@rt("/s/{code}")
-def get(code: str):
-    if not supabase: return RedirectResponse("/")
-    res = supabase.table("links").select("long_url, clicks").eq("short_code", code).execute()
-    if res.data:
-        # On incrémente le clic même si ça passe par ici
-        supabase.table("links").update({"clicks": res.data[0]['clicks'] + 1}).eq("short_code", code).execute()
-        return RedirectResponse(res.data[0]['long_url'])
-    return Layout(P("Lien non trouvé ou expiré."), "Oups")
+@rt("/gen-short", methods=["POST"])
+async def post(session, url: str, custom_code: str):
+    lang = session.get('lang', 'fr')
+    t = I18N_PATTERNS[lang]['shortener']
+    
+    if not supabase: return P(t['err_db'], style="color:red;")
 
+    # 1. Définition du code
+    if custom_code and custom_code.strip():
+        code = custom_code.strip().lower()
+        check = supabase.table("links").select("short_code").eq("short_code", code).execute()
+        if check.data:
+            return Div(P(t['err_taken'], style="color:red; font-weight:bold;"), cls="modern-card", style="border-color:red;")
+    else:
+        code = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
 
-# --- ROUTE : STATISTIQUES ---
+    # 2. Sauvegarde Supabase
+    try:
+        supabase.table("links").insert({"short_code": code, "long_url": url}).execute()
+    except Exception as e:
+        return P(f"Erreur : {e}", style="color:red;")
+
+    # 3. Construction du lien pro
+    direct_domain = "rtbx.space"
+    short_link = f"https://{direct_domain}/s/{code}"
+    
+    # 4. Génération du QR Code pour ce lien court (pour le tracking)
+    qr = qrcode.make(short_link)
+    buf = BytesIO(); qr.save(buf, format="PNG")
+    qr_s = base64.b64encode(buf.getvalue()).decode()
+
+    return Div(
+        H4(t['res_title']),
+        
+        # Affichage du lien court
+        Input(value=short_link, readonly=True, id="shortlink-res",
+              style="text-align:center; font-weight:800; color:var(--primary); font-size:1.2rem; border:2px solid var(--primary); background:#fff;"),
+        
+        # Affichage du QR Code automatique
+        Div(
+            Img(src=f"data:image/png;base64,{qr_s}", style="max-width:180px; margin: 1.5rem auto; border: 4px solid white; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"),
+            P(t['qr_info'], style="font-size:0.8rem; opacity:0.7;"),
+            style="text-align:center;"
+        ),
+        
+        # Boutons d'actions
+        Grid(
+            Button(t['copy_btn'], onclick="copyToClipboard()", cls="btn-full"),
+            A(Button(t['dl_qr'], cls="outline"), href=f"data:image/png;base64,{qr_s}", download=f"qr-{code}.png")
+        ),
+        A(Button(t['stats_btn'], cls="outline", style="width:100%; margin-top:10px;"), href=f"/stats/{code}"),
+        
+        Script("""
+            function copyToClipboard() {
+                var copyText = document.getElementById("shortlink-res");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(copyText.value);
+                alert("Lien copié !");
+            }
+        """),
+        style="text-align:center; margin-top:2rem; padding:2rem; background:rgba(79, 70, 229, 0.05); border-radius:24px; border: 1px solid var(--primary);"
+    )
+
 @rt("/stats/{code}")
-def get(code: str):
+def get(session, code: str):
+    lang = session.get('lang', 'fr')
     if not supabase: return RedirectResponse("/")
-    res = supabase.table("links").select("long_url, clicks", "created_at").eq("short_code", code).execute()
+    
+    res = supabase.table("links").select("long_url, clicks, created_at").eq("short_code", code).execute()
     
     if res.data:
         item = res.data[0]
-        # Formatage de la date
         date_obj = datetime.fromisoformat(item['created_at'].replace('Z', '+00:00'))
-        date_str = date_obj.strftime("%d/%m/%Y à %H:%M")
+        date_str = date_obj.strftime("%d/%m/%Y")
 
         content = Div(
-            H2(f"Analyse du lien : {code}", cls="gradient-text"),
+            H2(f"Analyses du lien : {code}", cls="gradient-text"),
             Div(
                 H3(f"{item['clicks']}", style="font-size:4rem; margin:0; color:var(--primary);"),
-                P("CLICS TOTALS", style="font-weight:800; letter-spacing:1px; opacity:0.6;"),
-                style="text-align:center; padding:2rem; background:rgba(79, 70, 229, 0.05); border-radius:30px; margin-bottom:2rem;"
+                P("CLICS / SCANS", style="font-weight:800; opacity:0.6;"),
+                style="text-align:center; padding:2rem; background:rgba(255,255,255,0.5); border-radius:30px; margin-bottom:2rem;"
             ),
             Grid(
                 Div(B("Destination :"), P(item['long_url'], style="word-break:break-all; font-size:0.9rem;")),
-                Div(B("Créé le :"), P(date_str))
+                Div(B("Date :"), P(date_str))
             ),
-            A(Button("← Créer un autre lien", cls="outline", style="margin-top:2rem;"), href="/shortener"),
+            A(Button("← Nouveau lien", cls="outline", style="margin-top:2rem;"), href="/shortener"),
             cls="modern-card"
         )
-        return Layout(content, "Statistiques")
+        return Layout(content, "Stats", session)
     
-    return Layout(P("Lien introuvable dans notre base de données."), "Erreur")
+    return Layout(P("Lien introuvable."), "Erreur", session)
+
+
+# --- ROUTE DE SECOURS (FALLBACK) AVEC SESSION ---
+@rt("/s/{code}")
+def get(code: str, session):
+    if not supabase: return RedirectResponse("/")
+    
+    try:
+        # On cherche l'URL dans Supabase
+        res = supabase.table("links").select("long_url", "clicks").eq("short_code", code).execute()
+        
+        if res.data:
+            item = res.data[0]
+            # On incrémente le clic (on garde les stats même sur le lien de secours)
+            supabase.table("links").update({"clicks": item['clicks'] + 1}).eq("short_code", code).execute()
+            
+            # Redirection directe vers l'URL longue
+            return RedirectResponse(item['long_url'])
+            
+        # Si le code n'existe pas, retour à l'accueil (qui utilisera la session pour la langue)
+        return RedirectResponse("/")
+        
+    except Exception as e:
+        print(f"Erreur redirection fallback: {e}")
+        return RedirectResponse("/")
+
 # --- PAGES LEGALES ---
 @rt("/ads.txt")
 def get(): return PlainTextResponse("google.com, pub-4081303157053373, DIRECT, f08c47fec0942fa0")
 
 @rt("/terms")
-def get():
-    content = Div(
-        H2("Conditions Générales d'Utilisation"),
-        P("Dernière mise à jour : Mars 2026", style="opacity: 0.6; font-size: 0.85rem;"),
-        
-        H4("1. Description du Service"),
-        P("RetailBox met à disposition des outils de génération de QR codes, de codes-barres techniques et de traitement d'images par IA. L'accès au service est gratuit et ne nécessite aucune inscription préalable."),
-        
-        H4("2. Utilisation autorisée et Interdictions"),
-        P("En utilisant ce site, vous vous engagez à respecter les règles suivantes :"),
-        Ul(
-            Li("Interdiction de générer des contenus frauduleux, trompeurs ou destinés à la contrefaçon de produits."),
-            Li("Interdiction d'intégrer des liens malveillants (phishing, virus) dans les QR codes générés."),
-            Li("Interdiction d'utiliser nos outils de manière automatisée (scripts, bots) pour saturer nos serveurs."),
-            Li("Le service ne doit pas être utilisé pour harceler des tiers via l'outil WhatsApp Direct.")
-        ),
-        
-        H4("3. Limitation de responsabilité"),
-        P("RetailBox décline toute responsabilité en cas d'erreur de lecture d'un code-barres ou d'un QR code suite à une mauvaise configuration utilisateur. Nous ne garantissons pas que les étiquettes de soldes générées soient conformes à toutes les réglementations locales d'affichage des prix."),
-        
-        H4("4. Disponibilité"),
-        P("Nous nous efforçons de maintenir le service accessible 24h/24, mais nous nous réservons le droit d'interrompre l'accès pour maintenance sans préavis."),
-        cls="modern-card"
-    )
-    return Layout(content, "Conditions")
+def get(session):
+    lang = session.get('lang', 'fr')
+    return Layout(LegalPage('terms', lang), "Conditions", session)
 
 @rt("/privacy")
-def get():
-    content = Div(
-        H2("Politique de Confidentialité"),
-        P("Votre vie privée est au cœur de notre service technique."),
-        
-        H4("1. Traitement des fichiers (RAM-Only)"),
-        P("RetailBox utilise un traitement éphémère en mémoire vive (RAM). Pour les outils comme 'RemBg IA' :"),
-        Ul(
-            Li("Les photos produits sont traitées instantanément."),
-            Li("Aucun fichier n'est écrit sur un disque dur permanent."),
-            Li("Toutes les données sont effacées dès la fin de la génération."),
-        ),
-        
-        H4("2. Publicité et Cookies (Google AdSense)"),
-        P("Ce site utilise Google AdSense. Google utilise des cookies pour diffuser des annonces basées sur vos visites précédentes sur ce site ou d'autres sites. Ces cookies permettent à Google et à ses partenaires de diffuser des annonces basées sur votre navigation. Vous pouvez désactiver la publicité personnalisée dans vos paramètres Google."),
-        
-        H4("3. Collecte de données personnelles"),
-        P("Nous ne collectons aucune donnée nominative (nom, email, adresse IP) à des fins de marketing. Le site est utilisable de manière totalement anonyme."),
-        
-        H4("4. Liens Externes"),
-        P("RetailBox contient des liens vers des services tiers (WhatsApp, Facebook, etc.). Nous ne sommes pas responsables de la gestion des données sur ces plateformes externes."),
-        
-        H4("5. Réducteur de liens (RetailLink)"),
-        P("Notre service de réduction d'URL a été conçu selon le principe de 'Privacy by Design'. Nous mesurons l'audience des liens de manière strictement quantitative (compteur de clics). Aucune donnée permettant d'identifier l'utilisateur final (comme l'adresse IP ou des identifiants publicitaires) n'est collectée lors de la redirection."),
-        cls="modern-card"
-    )
-    return Layout(content, "Vie Privée")
+def get(session):
+    lang = session.get('lang', 'fr')
+    return Layout(LegalPage('privacy', lang), "Confidentialité", session)
+
 @rt("/ugc")
-def get():
-    content = Div(
-        H2("Droits sur le Contenu Généré (UGC)"),
-        P("UGC signifie 'User Generated Content' (Contenu généré par l'utilisateur)."),
-        
-        H4("1. Propriété exclusive"),
-        P("Vous êtes le propriétaire unique de 100% des fichiers générés sur RetailBox. Cela inclut vos QR codes de menu, vos étiquettes de prix soldés et vos photos détourées."),
-        
-        H4("2. Usage Commercial et Droits"),
-        P("RetailBox vous accorde un droit d'utilisation commerciale illimité et gratuit sur toutes vos créations réalisées via nos outils. Nous ne percevons aucune commission et ne revendiquons aucun droit d'auteur sur votre travail."),
-        
-        H4("3. Responsabilité du contenu"),
-        P("En générant un fichier, vous certifiez posséder les droits sur les logos importés et les liens intégrés. RetailBox n'agit que comme un prestataire technique passif et ne valide pas la légalité du contenu que vous choisissez d'insérer dans vos codes."),
-        cls="modern-card"
-    )
-    return Layout(content, "UGC")
-
-
+def get(session):
+    lang = session.get('lang', 'fr')
+    return Layout(LegalPage('ugc', lang), "UGC", session)
 
 @rt("/contact")
-def get():
+def get(session):
+    lang = session.get('lang', 'fr')
+    d = CONTACT_DATA[lang]
     
-    # On définit le script pour gérer l'envoi sans redirection
+    # Script AJAX dynamique selon la langue
     ajax_script = Script(f"""
         async function handleSubmit(event) {{
             event.preventDefault();
@@ -971,7 +1253,7 @@ def get():
             const btn = event.target.querySelector("button");
             
             btn.disabled = true;
-            btn.innerText = "Envoi en cours...";
+            btn.innerText = "{d['btn_sending']}";
             
             fetch(event.target.action, {{
                 method: 'POST',
@@ -979,180 +1261,112 @@ def get():
                 headers: {{ 'Accept': 'application/json' }}
             }}).then(response => {{
                 if (response.ok) {{
-                    status.innerHTML = "<div class='modern-card' style='background:#dcfce7; color:#166534; padding:1rem; margin-bottom:1rem; border:1px solid #166534;'>✅ Merci ! Votre message a été envoyé avec succès.</div>";
+                    status.innerHTML = "<div class='modern-card' style='background:#dcfce7; color:#166534; padding:1rem; margin-bottom:1rem; border:1px solid #166534; border-radius:12px;'>{d['msg_success']}</div>";
                     event.target.reset();
                 }} else {{
-                    status.innerHTML = "❌ Une erreur est survenue. Veuillez réessayer.";
+                    status.innerHTML = "<div style='color:#ef4444; margin-bottom:1rem;'>{d['msg_error']}</div>";
                 }}
             }}).catch(error => {{
-                status.innerHTML = "❌ Erreur de connexion.";
+                status.innerHTML = "<div style='color:#ef4444; margin-bottom:1rem;'>{d['msg_conn_error']}</div>";
             }}).finally(() => {{
                 btn.disabled = false;
-                btn.innerText = "🚀 Envoyer le message";
+                btn.innerText = "{d['btn_send']}";
             }});
         }}
     """)
 
     content = Div(
-        H2("Contactez l'équipe RetailBox", cls="gradient-text"),
-        P("Une suggestion technique ou un partenariat ? Utilisez le formulaire ci-dessous."),
+        H2(d['title'], cls="gradient-text"),
+        P(d['sub']),
         
-        # Zone pour afficher le message de succès/erreur
         Div(id="contact-status"),
         
         Form(
-            Label("Votre adresse e-mail", 
+            Label(d['label_email'], 
                   Input(type="email", name="email", placeholder="votre@email.com", required=True)),
             
-            Label("Sujet", 
-                  Input(name="subject", placeholder="Ex: Support QR Code", required=True)),
+            Label(d['label_subject'], 
+                  Input(name="subject", placeholder=d['subject_p'], required=True)),
             
-            Label("Votre message", 
-                  Textarea(name="message", placeholder="Comment pouvons-nous vous aider ?", rows=6, required=True)),
+            Label(d['label_message'], 
+                  Textarea(name="message", placeholder=d['message_p'], rows=6, required=True)),
             
-            Input(type="hidden", name="_gotcha", style="display:none"), # Anti-spam
+            Input(type="hidden", name="_gotcha", style="display:none"),
             
-            Button("🚀 Envoyer le message", type="submit", cls="btn-full"),
+            Button(d['btn_send'], type="submit", cls="btn-full"),
             
-            action=f"https://formspree.io/f/{FORMSPREE_ID }",
-            onsubmit="handleSubmit(event)" # On appelle le script ici
+            action=f"https://formspree.io/f/{os.environ.get('FORMSPREE_ID')}",
+            onsubmit="handleSubmit(event)"
         ),
-        ajax_script, # On injecte le script sur la page
+        ajax_script,
         cls="modern-card", style="max-width: 700px; margin: auto; padding: 3rem;"
     )
-    return Layout(content, "Contact")
-@rt("/about")
-def get():
-    content = Div(
-        H2("À propos de RetailBox", cls="gradient-text"),
-        P("RetailBox est une suite d'outils techniques dédiée à l'optimisation des opérations pour le commerce moderne et les Small Businesses."),
-        
-        H4("Accompagner la croissance des entreprises"),
-        P("""Nous centralisons les ressources critiques pour les entrepreneurs et gestionnaires de points de vente. 
-          De la boutique physique au site e-commerce, nous fournissons les standards technologiques 
-          indispensables pour rester compétitif dans un environnement digital en constante évolution."""),
-        
-        Grid(
-            Div(
-                H5("📦 Gestion de Stock & Inventaire"),
-                P("Nous simplifions la logistique commerciale avec des générateurs de codes-barres conformes (EAN-13, Code 128). Nous facilitons l'organisation de vos stocks et l'étiquetage précis de vos produits.")
-            ),
-            Div(
-                H5("🍽️ Solutions pour Restaurants"),
-                P("Nous modernisons l'expérience client . Nous permettons un accès instantané à vos cartes et tarifs , optimisant ainsi votre service en salle.")
-            )
-        ),
-        
-        Grid(
-            Div(
-                H5("🌐 Identité Digitale"),
-                P("Nous optimisons votre visibilité professionnelle avec des Social Cards et VCards intelligentes. Nous créons un point d'entrée unique pour regrouper vos réseaux sociaux et vos canaux de vente.")
-            ),
-            Div(
-                H5("📸 Optimisation Produit"),
-                P("Nous valorisons vos articles de vente grâce à notre IA de détourage. Nous transformons vos photos brutes en images produits de qualité studio pour vos fiches e-commerce et vos catalogues.")
-            )
-        ),
-        
-        H4("Notre engagement pour vos données"),
-        P("""Nous appliquons une politique de confidentialité rigoureuse. Chaque traitement technique est 
-          exécuté en mémoire vive (RAM) de manière isolée. Nous ne conservons aucune donnée commerciale, 
-          photo produit ou information confidentielle sur nos serveurs. Nous garantissons votre 
-          propriété exclusive sur 100% des contenus générés (UGC) via notre plateforme."""),
-        
-        cls="modern-card", style="max-width: 900px; margin: auto; padding: 3rem; line-height: 1.8;"
-    )
-    return Layout(content, "À Propos")
+    
+    return Layout(content, "Contact", session)
 
 @rt("/faq")
-def get():
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = MULTILINGUAL_DATA_FaqGuide[lang]
+    
     content = Div(
-        H2("Foire aux Questions (FAQ)", cls="gradient-text"),
-        P("Retrouvez toutes les réponses pour optimiser votre commerce avec nos outils digitaux."),
+        H2(t['faq_title'], cls="gradient-text"),
+        P(t['faq_sub']),
         
         Div(
             *[Details(
                 Summary(item["q"]), 
-                # On utilise NotStr pour permettre le HTML (les liens) dans la réponse
                 P(NotStr(item["a"]))
-              ) for item in faq_data],
-            
+              ) for item in t['faq_data']],
+            cls="faq-section"
         ),
         
-        # Petit call-to-action en bas de FAQ
         Div(
-            H4("Vous ne trouvez pas votre réponse ?"),
-            A(Button("Contactez notre support gratuit", cls="outline"), href="/contact"),
+            H4("Contact Us" if lang == 'en' else "Contactez-nous"),
+            A(Button("Support" if lang == 'en' else "Support Gratuit", cls="outline"), href="/contact"),
             style="margin-top: 3rem; text-align: center;"
         ),
         
         cls="modern-card", style="max-width: 900px; margin: auto; padding: 3rem;"
     )
-    return Layout(content, "FAQ")
+    return Layout(content, "FAQ", session)
 
 @rt("/guide")
-def get():
-    # Mapping sur guide_data avec un style "Documentation Pro"
+def get(session):
+    lang = session.get('lang', 'fr')
+    t = MULTILINGUAL_DATA_FaqGuide[lang]
+    
+    # Mapping dynamique sur guide_data
     guide_cards = Div(*[
         Div(
-            # En-tête de carte : Icône + Titre alignés
             Div(
                 Safe(f'<i data-lucide="{item["icon"]}" style="width:32px; height:32px; color:var(--primary); stroke-width:2.5px;"></i>'),
                 H4(item["title"]),
                 style="display:flex; align-items:center; gap:15px; margin-bottom:0.5rem;"
             ),
-            # Description avec support des liens SEO
             P(NotStr(item["desc"])),
-            
-            # Bouton d'action en bas de carte
-            A(Button(f"Utiliser l'outil {item['title']}", cls="outline"), 
+            A(Button("Use Tool" if lang == 'en' else "Utiliser l'outil", cls="outline"), 
               href=item["link"], style="margin-top:auto;"),
-            
             cls="guide-card"
-        ) for item in guide_data
+        ) for item in t['guide_data']
     ], cls="guide-grid")
 
     content = Div(
-        # Header de la page
         Div(
-            H2("Guide d'utilisation professionnel", cls="gradient-text", style="font-size:3rem;"),
-            P("Apprenez à configurer vos outils pour une performance maximale en boutique et en ligne.", 
-              style="font-size:1.2rem; opacity:0.8;"),
+            H2(t['guide_title'], cls="gradient-text", style="font-size:3rem;"),
+            P(t['guide_sub'], style="font-size:1.2rem; opacity:0.8;"),
             style="margin-bottom:4rem; text-align:center;"
         ),
-        
-        # La Grille de guides
         guide_cards,
-        
-        # Section de conseils techniques "Expert"
-        Div(
-            H3("💡 Conseils d'expert pour le Retail", style="margin-bottom:1.5rem;"),
-            Grid(
-                Div(
-                    H5("Qualité d'impression"),
-                    P("Pour vos codes-barres EAN-13, utilisez une imprimante thermique à 300 DPI minimum pour éviter les erreurs de lecture en caisse.")
-                ),
-                Div(
-                    H5("Format de fichier"),
-                    P("Privilégiez le format PNG pour vos QR Codes de menu restaurant. Il conserve la netteté des pixels même lors d'un agrandissement sur support rigide.")
-                ),
-                Div(
-                    H5("Optimisation IA"),
-                    P("Le détourage automatique (RemBg) est optimal lorsque le produit est photographié sur un fond uni, même s'il n'est pas parfaitement blanc.")
-                ),
-                Div(
-                    H5("Personnalisation URL shortener"),
-                    P("Utilisez l'alias personnalisé pour vos campagnes de soldes. Créez des liens comme /s/soldes-2026 pour identifier immédiatement la source de vos clics")
-                ),
-
-
-            ),
-            cls="modern-card", 
-            style="margin-top:5rem; padding:3rem; border-left: 6px solid var(--primary); background: rgba(79, 70, 229, 0.03);"
-        ),
-        style="padding: 2rem 0;"
+        cls="container"
     )
-    return Layout(content, "Guide")
+    return Layout(content, "Guide", session)
+
+@rt("/set-lang/{lang}")
+def get(lang: str, session):
+    if lang in ['fr', 'en']:
+        session['lang'] = lang
+    return RedirectResponse(url='/')
 if __name__ == "__main__":
     #main
     import uvicorn

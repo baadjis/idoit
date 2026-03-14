@@ -29,6 +29,85 @@ styles= f"""
     .nav-pills a {{ padding: 0.6rem 1.2rem; border-radius: 12px; background: white; border: 1px solid #e2e8f0; font-weight: 700; color: #1e293b; }}
     .nav-pills a.active {{ background: var(--primary) !important; color: white !important; border-color: var(--primary); }}
 
+    
+    /* Barre supérieure : s'adapte au mode clair/sombre */
+    /* Barre supérieure Inline */
+    .top-nav-bar {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--pico-border-color);
+        margin-bottom: 2rem;
+    }}
+
+    /* Conteneur de défilement (Scroll) */
+    .nav-scroll-container {{
+        flex: 1;
+        overflow-x: auto;
+        white-space: nowrap;
+        display: flex;
+        justify-content: center;
+        scrollbar-width: none; /* Cache la barre sur Firefox */
+    }}
+    .nav-scroll-container::-webkit-scrollbar {{ display: none; }} /* Cache la barre sur Chrome/Safari */
+
+    .nav-pills {{
+        display: flex;
+        gap: 0.8rem;
+        padding: 4px;
+        background: rgba(0, 0, 0, 0.03); /* Fond léger pour l'effet "capsule" */
+        border-radius: 18px;
+        min-width: max-content;
+    }}
+
+    /* L'onglet individuel (Le Pill) */
+    .nav-pills a {{
+        padding: 0.6rem 1.2rem !important;
+        border-radius: 14px !important;
+        background: transparent;
+        border: 1px solid transparent !important;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--pico-color) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none !important;
+    }}
+
+    /* Effet au survol (Hover) */
+    .nav-pills a:hover:not(.active) {{
+        background: rgba(79, 70, 229, 0.08) !important;
+        color: var(--primary) !important;
+        transform: translateY(-1px);
+    }}
+
+    /* L'onglet ACTIF (Le Gradient) */
+    .nav-pills a.active {{
+        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        border: none !important;
+    }}
+
+    /* ADAPTATION DARK MODE IPHONE */
+    @media (prefers-color-scheme: dark) {{
+        .nav-pills {{ background: rgba(255, 255, 255, 0.05); }}
+        .nav-pills a {{ color: #f8fafc !important; }}
+        .nav-pills a:hover:not(.active) {{ background: rgba(255, 255, 255, 0.1) !important; }}
+    }}
+
+    /* RESPONSIVE MOBILE */
+    @media (max-width: 800px) {{
+        .nav-scroll-container {{ justify-content: flex-start; }}
+        .top-nav-bar {{ padding: 0.5rem 0.2rem; gap: 8px; }}
+        .nav-pills a {{ padding: 0.5rem 1rem !important; font-size: 0.8rem !important; }}
+        .lang-btn {{ font-size: 0.7rem !important; padding: 0.4rem 0.6rem !important; }}
+    }}
+
     .services-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: 2rem; margin-top: 2rem; }}
     .modern-card {{ border: 1px solid #e2e8f0; padding: 2rem; border-radius: 24px; height: 100%; display: flex; flex-direction: column; background: #ffffff; transition: 0.3s ease; }}
     .modern-card:hover {{ transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }}
