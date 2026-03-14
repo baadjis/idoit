@@ -7,6 +7,7 @@ styles= f"""
         --secondary: #9333ea;
         --pico-color: #1e293b;
         --pico-background-color: #ffffff;
+         --pico-block-spacing-vertical: 0;
     }}
 
     
@@ -20,7 +21,13 @@ styles= f"""
         .nav-pills a {{ background: #1e293b !important; color: white !important; }}
     }}
 
-    body {{ margin: 0; padding: 0; background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%); background-attachment: fixed; min-height: 100vh; }}
+    body {{ margin: 0 !important; padding: 0 !important; background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%); background-attachment: fixed; min-height: 100vh; }}
+    
+   html{{ 
+    margin: 0 !important; 
+    padding-top: 0 !important; 
+}}
+
     a {{ text-decoration: none !important; border: none !important; color: inherit; }}
 
     .gradient-text {{ background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; display: inline-block; }}
@@ -36,6 +43,7 @@ styles= f"""
     header {{
         position: sticky;
         top: 0;
+        margin-top: 0 !important;
         z-index: 1000;
         background: rgba(255, 255, 255, 0.8) !important;
         backdrop-filter: blur(12px);
