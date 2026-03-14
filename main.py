@@ -1051,6 +1051,7 @@ def get(request, session):
 async def post(request, session, url: str, custom_code: str):
     lang = current_lang(request)
     t = I18N_PATTERNS[lang]['shortener']
+   
     
     if not supabase: return P(t['err_db'], style="color:red;")
 
@@ -1073,6 +1074,9 @@ async def post(request, session, url: str, custom_code: str):
     direct_domain = "rtbx.space"
     short_link = f"https://{direct_domain}/s/{code}"
     
+    # Lien vers la page de statistiques sur Next.js
+    stats_link = f"https://rtbx.space/stats/{code}"
+    
     qr = qrcode.make(short_link)
     buf = BytesIO(); qr.save(buf, format="PNG")
     qr_s = base64.b64encode(buf.getvalue()).decode()
@@ -1092,7 +1096,7 @@ async def post(request, session, url: str, custom_code: str):
             Button(t['copy_btn'], onclick="copyToClipboard()", cls="btn-full"),
             A(Button(t['dl_qr'], cls="outline"), href=f"data:image/png;base64,{qr_s}", download=f"qr-{code}.png")
         ),
-        A(Button(t['stats_btn'], cls="outline", style="width:100%; margin-top:10px;"), href=f"/stats/{code}"),
+        A(Button(t['stats_btn'], cls="outline", style="width:100%; margin-top:10px;"), href=stats_link),
         
         Script(f"""
             function copyToClipboard() {{
