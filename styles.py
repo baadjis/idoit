@@ -9,6 +9,8 @@ styles= f"""
         --pico-background-color: #ffffff;
     }}
 
+    
+
     /* FIX DARK MODE IPHONE / ANDROID */
     @media (prefers-color-scheme: dark) {{
         :root {{ --pico-color: #f8fafc !important; --pico-background-color: #0f172a !important; }}
@@ -30,68 +32,112 @@ styles= f"""
     .nav-pills a.active {{ background: var(--primary) !important; color: white !important; border-color: var(--primary); }}
 
     
+     /* --- HEADER STICKY & GLASSMORPHISM --- */
+    header {{
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--pico-border-color);
+        padding: 0.5rem 0;
+    }}
+    
+    @media (prefers-color-scheme: dark) {{
+        header {{ background: rgba(15, 23, 42, 0.8) !important; }}
+    }}
+
+    .container {{
+        max-width: 1200px; /* Largeur idéale pour un tableau de bord pro */
+        margin: 0 auto;    /* Centre le contenu horizontalement */
+        padding: 0 1.5rem; /* Marges de sécurité sur les côtés */
+        width: 100%;
+        box-sizing: border-box;
+    }}
+
+    /* Ajustement spécifique pour les petits écrans (iPhone) */
+    @media (max-width: 600px) {{
+        .container {{
+            padding: 0 1rem; /* On réduit un peu l'espace sur mobile pour gagner de la place */
+        }}
+    }}
+
+    /* On s'assure que le contenu sous le header sticky ne soit pas caché */
+    main {{
+        display: block;
+        padding-top: 1rem;
+    }}
+    
     /* Barre supérieure : s'adapte au mode clair/sombre */
     /* Barre supérieure Inline */
-    .top-nav-bar {{
+     .top-nav-bar {{
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 15px;
-        padding: 0.8rem 0;
-        border-bottom: 1px solid var(--pico-border-color);
-        margin-bottom: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        gap: 20px;
+        flex-wrap: nowrap; /* Empeche le retour à la ligne sur PC */
     }}
-
-    /* Conteneur de défilement (Scroll) */
+    
+   
+     /* --- NAVIGATION PILLS --- */
     .nav-scroll-container {{
         flex: 1;
         overflow-x: auto;
         white-space: nowrap;
+        scrollbar-width: none;
         display: flex;
-        justify-content: center;
-        scrollbar-width: none; /* Cache la barre sur Firefox */
+        justify-content: center; /* Centre la nav sur PC */
     }}
-    .nav-scroll-container::-webkit-scrollbar {{ display: none; }} /* Cache la barre sur Chrome/Safari */
+    .nav-scroll-container::-webkit-scrollbar {{ display: none; }}
 
     .nav-pills {{
         display: flex;
-        gap: 0.8rem;
+        gap: 0.4rem;
+        background: rgba(0, 0, 0, 0.04);
         padding: 4px;
-        background: rgba(0, 0, 0, 0.03); /* Fond léger pour l'effet "capsule" */
-        border-radius: 18px;
-        min-width: max-content;
+        border-radius: 16px;
     }}
 
-    /* L'onglet individuel (Le Pill) */
     .nav-pills a {{
-        padding: 0.6rem 1.2rem !important;
-        border-radius: 14px !important;
-        background: transparent;
-        border: 1px solid transparent !important;
+        padding: 0.4rem 0.9rem !important;
+        border-radius: 12px !important;
         font-weight: 700;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--pico-color) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
         text-decoration: none !important;
     }}
 
-    /* Effet au survol (Hover) */
-    .nav-pills a:hover:not(.active) {{
-        background: rgba(79, 70, 229, 0.08) !important;
-        color: var(--primary) !important;
-        transform: translateY(-1px);
-    }}
-
-    /* L'onglet ACTIF (Le Gradient) */
     .nav-pills a.active {{
         background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important;
         color: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         border: none !important;
     }}
+
+    .lang-btn {{
+        border: 2px solid var(--primary) !important;
+        border-radius: 12px !important;
+        font-weight: 800;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+        text-decoration: none !important;
+    }}
+
+    .nav-lang-container {{
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 1; /* Prend l'espace pour centrer la nav */
+        justify-content: flex-end;
+    }}
+
+    
+    .logo-wrap {{ flex-shrink: 0; }}
+    
 
     /* ADAPTATION DARK MODE IPHONE */
     @media (prefers-color-scheme: dark) {{
@@ -101,11 +147,14 @@ styles= f"""
     }}
 
     /* RESPONSIVE MOBILE */
-    @media (max-width: 800px) {{
+     @media (max-width: 900px) {{
+        .top-nav-bar {{
+            flex-direction: column; /* Logo en haut, le reste en dessous */
+            gap: 10px;
+        }}
+        .logo-wrap {{ width: 100%; display: flex; justify-content: center; }}
+        .nav-lang-container {{ width: 100%; justify-content: space-between; }}
         .nav-scroll-container {{ justify-content: flex-start; }}
-        .top-nav-bar {{ padding: 0.5rem 0.2rem; gap: 8px; }}
-        .nav-pills a {{ padding: 0.5rem 1rem !important; font-size: 0.8rem !important; }}
-        .lang-btn {{ font-size: 0.7rem !important; padding: 0.4rem 0.6rem !important; }}
     }}
 
     .services-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: 2rem; margin-top: 2rem; }}
@@ -156,7 +205,8 @@ styles= f"""
     .legal-links {{ display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.9rem; }}
 
     .top-ad-banner {{ width: 100%; max-width: 1100px; margin: 1rem auto; min-height: 90px; background: rgba(0,0,0,0.02); border: 1px dashed #cbd5e1; border-radius: 16px; display: flex; align-items: center; justify-content: center; }}
-    .app-grid {{ display: grid; grid-template-columns: 1fr 320px; gap: 2rem; max-width: 1200px; margin: auto; padding: 0 1rem; }}
+    
+    .app-grid {{ display: grid; grid-template-columns: 1fr 320px; gap: 2rem; margin: 2rem auto; }}
     @media (max-width: 1024px) {{ .app-grid {{ grid-template-columns: 1fr; }} }}
     .faq-link {{
         color: var(--primary) !important;

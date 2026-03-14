@@ -201,58 +201,47 @@ def Layout(content, active_page, session, title="RetailBox"):
         (t['about'], "/about", "info")
     ]
     
-    return page_metas , Title(f"{active_page} | {title}"), Main(
+    return page_metas, Title(f"{active_page} | {title}"), Main(
         Header(
-            # --- LA BARRE DE NAVIGATION (Logo | Tabs | Lang) ---
             Div(
-                # 1. Logo (à gauche)
-                Logo(),
+                # 1. LOGO (Centré sur mobile via .logo-wrap)
+                Div(Logo(), cls="logo-wrap"),
                 
-                # 2. Tabs (au centre, défilables sur mobile)
+                # 2. CONTENEUR NAV + LANG (Une ligne sur mobile)
                 Div(
-                    Nav(
-                        Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:16px"></i> {name}'), 
-                               href=url, 
-                               cls="active" if active_page == name else "") 
-                             for name, url, icon in nav_items], 
-                            cls="nav-pills")
+                    Div(
+                        Nav(
+                            Div(*[A(Safe(f'<i data-lucide="{icon}" style="width:16px"></i> {name}'), 
+                                   href=url, 
+                                   cls="active" if active_page == name else "") 
+                                 for name, url, icon in nav_items], 
+                                cls="nav-pills")
+                        ),
+                        cls="nav-scroll-container"
                     ),
-                    cls="nav-scroll-container"
+                    LangSwitcher(lang), # Langue à droite de la nav
+                    cls="nav-lang-container"
                 ),
-                
-                # 3. Langue (à droite)
-                LangSwitcher(lang),
-                
                 cls="top-nav-bar"
-            ),
-            
-            # --- SECTION TITRE (HERO) ---
-            Div(
-                H1(t['hero_title'], cls="hero-title gradient-text"), 
-                style="text-align:center; padding: 1rem 0;"
             )
         ),
         
-        # Bannière Pub
-        Div(P("Publicité", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
-        
-        # Grille principale (Contenu + Sidebar)
+        # Le reste du contenu descend un peu pour laisser la place au header fixe
         Div(
-            Section(content), 
-            Aside(
-                Div(P("Publicité"), 
-                    style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; height:600px; display:flex; align-items:center; justify-content:center; position:sticky; top:20px;"), 
-                cls="sidebar"
-            ), 
-            cls="app-grid"
+            Div(H1(t['hero_title'], cls="hero-title gradient-text"), style="margin-bottom:2rem;"),
+            
+            Div(P("Publicité", style="font-size:0.6rem; opacity:0.5; margin:0"), cls="top-ad-banner"),
+            
+            Div(
+                Section(content), 
+                Aside(Div(P("Publicité"), style="background:rgba(0,0,0,0.02); border:1px dashed #ccc; border-radius:20px; min-height:300px; display:flex; align-items:center; justify-content:center;"), cls="sidebar"), 
+                cls="app-grid"
+            ),
+            
+            FooterSection(lang=lang),
+            cls="container"
         ),
-        
-        # Footer multilingue
-        FooterSection(lang=lang),
-        
-        # Scripts Lucide
-        Script("lucide.createIcons();"), 
-        cls="container"
+        Script("lucide.createIcons();")
     )
 
 def FaqSection():
