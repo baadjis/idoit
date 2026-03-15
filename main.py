@@ -98,6 +98,7 @@ def get_translated_metas(lang):
     m = MULTILINGUAL_DATA_MetaTags[lang]['meta']
     return (
         Title(m['title']),
+        Meta(name="google-adsense-account", content="ca-pub-4081303157053373"),
         Meta(name="description", content=m['desc']),
         Meta(name="keywords", content=m['keywords']),
         
